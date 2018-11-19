@@ -3,7 +3,28 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - target
+  - ground
+  - block
+  - goal
+  - agent
+  - wall
+  - banana
+  - stone
+  - pyramid
+  - walkableSurface
+  - redGoal
+  - orangeGoal
+  - orangeBlock
+  - redBlock
+  - iWall
+  - switchOff
+  - blueGoal
+  - ball
+  - blueAgent
+  - badBanana
+  - pit
   layers:
   - Default
   - TransparentFX
@@ -13,8 +34,8 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
+  - Overlay
+  - Background
   - 
   - 
   - 
@@ -40,4 +61,13 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Overlay
+    uniqueID: 1065778103
+    locked: 0
+  - name: UI
+    uniqueID: 2997560903
+    locked: 0
+  - name: Background
+    uniqueID: 1237576267
     locked: 0

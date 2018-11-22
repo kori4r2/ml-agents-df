@@ -2,15 +2,29 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BattleManager : MonoBehaviour {
+public static class BattleManager{
+    public static List<Unit> units;
+    public static Unit currentUnit;
+    public static Skill selectedAction;
+    public static Unit targetUnit;
+    private static int nUnitsActed;
+    // To do: turn queue
+    public static void Kill(Unit unit) {
+        //to do
+    }
+    public static void Add(Unit unit) {
+        //to do
+    }
+    public static void StartBattle() {
+        //to do
+    }
+    public static void EndAction() {
+        //to do
+    }
+    public static void EndBattle() {
+        //to do
+    }
+    public static void OnSkillSelected() {
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    }
 }

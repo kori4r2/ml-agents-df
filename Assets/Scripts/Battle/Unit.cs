@@ -1,14 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Unit : MonoBehaviour {
     // Fixed stats
+    [SerializeField]
     private int maxHP;
+    [SerializeField]
     private int maxMP;
+    [SerializeField]
     private int baseDef;
+    [SerializeField]
     private int baseBth;
+    [SerializeField]
     private int baseInitiative;
+    [SerializeField]
     // Changeable stats
     private int curHP;
     private int curMP;
@@ -20,9 +27,30 @@ public class Unit : MonoBehaviour {
     public bool acted;
     public bool lastAtkHit;
     public new string name;
+    // UI Elements
+    public GameObject outline;
+    public Text nameUI;
+    public Text hpUI;
+    public Text statusUI;
+    public Button selectButton;
+    // Name of skills must be the same as the button game object names
+    public Button[] skillButtons; // to do
     // Properties (getters/setters)
-    private int CurHP { get; set; }
-    private int CurMP { get; set; }
+    private int CurHP {
+        get {
+            return curHP;
+        }
+        set {
+            curHP = (value <= 0)? 0 : value;
+            hpUI.text = "HP =             "+curHP.ToString().PadLeft(3)+" /100";
+            if (curHP <= 0) {
+                MakeUnclickable();
+                selectButton.interactable = false;
+                BattleManager.Kill(this);
+            }
+        }
+    }
+    private int CurMP { get; set; } //not gonna use this now
     private int BaseAtk { get; set; }
     private int MaxAtk { get; set; }
     public int Def { get; set; }
@@ -43,26 +71,51 @@ public class Unit : MonoBehaviour {
     private int DmgRoll(){
         return Random.Range(BaseAtk, MaxAtk);
     }
+    private float GetMultiplier(string element) {
+        return 1.0f;
+    }
+    private string updateStatusUI() {
+        string newStatusUI = "";
+        foreach(StatusEffect status in effects) {
+            newStatusUI += status.text + "(" + status.turnsLeft + ")" + System.Environment.NewLine;
+        }
+        statusUI.text = newStatusUI;
+        return newStatusUI;
+    }
     // Public functions
     public bool CheckHit(int bth) {
         return bth > Def;
     }
     public void Purge() {
-        //to do
+        foreach (StatusEffect status in effects)
+            status.Remove();
     }
     public void CountdownEffects() {
-        //to do
+        foreach (StatusEffect status in effects)
+            status.Countdown();
     }
-    public void DealDamage(int value, string element="None") {
-        //to do
+    public void DealDamage(int value, string element = "None") {
+        CurHP -= (int)(value * GetMultiplier(element));
     }
+    public void MakeClickable() {
+        selectButton.gameObject.GetComponent<Image>().raycastTarget = true;
+    }
+    public void MakeUnclickable() {
+        selectButton.gameObject.GetComponent<Image>().raycastTarget = false;
+    }
+
     // Use this for initialization
     void Start () {
-		//to do
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		// to do
+        CurHP = maxHP;
+        CurMP = maxMP;
+        effects = new List<StatusEffect>();
+        skillList = new List<Skill>();
+        updateStatusUI();
+        //to do: adicionar manualmente as skills na ordem certa
+        foreach (Skill skill in skillList)
+            skill.ResetCooldown();
+        MakeUnclickable();
+        outline.SetActive(false);
+        BattleManager.Add(this);
 	}
 }

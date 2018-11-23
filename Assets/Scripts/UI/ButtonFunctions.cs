@@ -10,4 +10,8 @@ public class ButtonFunctions : MonoBehaviour{
         BattleManager.selectedAction = BattleManager.currentUnit.skillList.Find(
             skill => skill.name == EventSystem.current.currentSelectedGameObject.name);
     }
+    public static void TargetSelected() {
+        BattleManager.targetUnit = EventSystem.current.currentSelectedGameObject.GetComponentInParent<Unit>();
+        BattleManager.selectedAction.Use();
+    }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum TARGETS {
+    SELF,
     ALLIES,
     ENEMIES,
     ALL
@@ -11,6 +12,8 @@ public enum TARGETS {
 public abstract class Skill {
     private readonly int cooldown;
     private int curCD;
+    protected Unit thisUnit;
+    protected bool available;
     // Name of skills must be the same as the button game object names
     public readonly string name;
     public readonly TARGETS skillType;
@@ -20,18 +23,20 @@ public abstract class Skill {
         }
         set {
             curCD = (value <= 0)? 0 : value;
-            if (curCD <= 0)
-                Available = true;
+            Available = (curCD <= 0);
         }
     }
-    public bool Available { get; private set; }
+    public abstract bool Available { get; protected set; }
     public abstract void Use();
 
     public void ResetCooldown() {
         CurCD = cooldown;
     }
-
-    public Skill() {
+    protected Skill(Unit unit, string str, int cd, TARGETS type) {
+        thisUnit = unit;
+        name = str;
+        cooldown = cd;
+        skillType = type;
         ResetCooldown();
     }
 }

@@ -36,11 +36,11 @@ public class Unit : MonoBehaviour {
     // Name of skills must be the same as the button game object names
     public Button[] skillButtons; // to do
     // Properties (getters/setters)
-    private int CurHP {
+    public int CurHP {
         get {
             return curHP;
         }
-        set {
+        private set {
             curHP = (value <= 0)? 0 : value;
             hpUI.text = "HP =             "+curHP.ToString().PadLeft(3)+" /100";
             if (curHP <= 0) {
@@ -50,9 +50,11 @@ public class Unit : MonoBehaviour {
             }
         }
     }
-    private int CurMP { get; set; } //not gonna use this now
-    private int BaseAtk { get; set; }
-    private int MaxAtk { get; set; }
+    public int CurMP { get; private set; } //not gonna use this now
+    public int MaxHP { get; }
+    public int MaxMP { get; }
+    public int BaseAtk { get; private set; }
+    public int MaxAtk { get; private set; }
     public int Def { get; set; }
     public int Bth { get; set; }
     public int Dmg {
@@ -62,7 +64,7 @@ public class Unit : MonoBehaviour {
         get { return AtkRoll(); }
     }
     // Aux variables
-    private List<StatusEffect> effects;
+    public List<StatusEffect> effects;
     public List<Skill> skillList;
     // Aux functions
     private int AtkRoll() {
@@ -77,7 +79,7 @@ public class Unit : MonoBehaviour {
     private string updateStatusUI() {
         string newStatusUI = "";
         foreach(StatusEffect status in effects) {
-            newStatusUI += status.text + "(" + status.turnsLeft + ")" + System.Environment.NewLine;
+            newStatusUI += status.text + "(" + status.TurnsLeft + ")" + System.Environment.NewLine;
         }
         statusUI.text = newStatusUI;
         return newStatusUI;
@@ -106,14 +108,20 @@ public class Unit : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        nameUI.text = name;
         CurHP = maxHP;
         CurMP = maxMP;
         effects = new List<StatusEffect>();
         skillList = new List<Skill>();
         updateStatusUI();
-        //to do: adicionar manualmente as skills na ordem certa
-        foreach (Skill skill in skillList)
-            skill.ResetCooldown();
+        //Adds all skills to the list
+        skillList.Add(new Attack(this));
+        skillList.Add(new Double(this));
+        skillList.Add(new Poison(this));
+        skillList.Add(new Stun(this));
+        skillList.Add(new Blind(this));
+        skillList.Add(new Block(this));
+        skillList.Add(new Heal(this));
         MakeUnclickable();
         outline.SetActive(false);
         BattleManager.Add(this);

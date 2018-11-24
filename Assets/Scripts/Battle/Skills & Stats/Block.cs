@@ -5,13 +5,13 @@ using UnityEngine;
 public class Block : Skill {
     public Block(Unit unit) :
         base(unit, "Block", 6, TARGETS.SELF) {
-        Available = true;
     }
 
     public override bool Available { get; protected set; }
 
     public override void Use() {
+        base.Use();
         // Apply defense boost to self
-        BattleManager.targetUnit.effects.Add(new DefUp(thisUnit, thisUnit));
+        BattleManager.targetUnit.AddEffect(new DefUp(thisUnit, thisUnit));
     }
 }

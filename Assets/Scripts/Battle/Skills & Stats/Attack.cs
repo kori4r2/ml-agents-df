@@ -18,8 +18,9 @@ public class Attack : Skill {
     }
 
     public override void Use() {
+        base.Use();
         // check hit on target
-        if (BattleManager.targetUnit.CheckHit(thisUnit.Atk))
+        if (thisUnit.lastAtkHit = BattleManager.targetUnit.CheckHit(thisUnit.Atk))
             // deal damage as needed - 1 100% hit
             BattleManager.targetUnit.DealDamage(thisUnit.Dmg);
     }

@@ -18,19 +18,19 @@ public abstract class Skill {
     public readonly string name;
     public readonly TARGETS skillType;
     public int CurCD {
-        get {
-            return curCD;
-        }
+        get { return curCD; }
         set {
             curCD = (value <= 0)? 0 : value;
             Available = (curCD <= 0);
         }
     }
     public abstract bool Available { get; protected set; }
-    public abstract void Use();
+    public virtual void Use() {
+        CurCD = cooldown;
+    }
 
     public void ResetCooldown() {
-        CurCD = cooldown;
+        CurCD = 0;
     }
     protected Skill(Unit unit, string str, int cd, TARGETS type) {
         thisUnit = unit;

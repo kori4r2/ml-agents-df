@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Poisoned : StatusEffect {
-    private float dotMultiplier;
-    public Poisoned(Unit src, Unit trgt, int dur=5, float dmgMult=.2f) :
+    private float dotMultiplier = .2f;
+    public Poisoned(Unit src, Unit trgt, int dur=5) :
         base(src, trgt, "Poisoned", dur) {
-        dotMultiplier = dmgMult;
     }
 
     public override bool Countdown() {
@@ -20,7 +19,6 @@ public class Poisoned : StatusEffect {
     }
 
     public override void Remove() {
-        target.effects.Remove(this);
     }
 
     protected override void Apply() {

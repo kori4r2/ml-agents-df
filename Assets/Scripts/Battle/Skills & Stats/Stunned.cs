@@ -8,17 +8,16 @@ public class Stunned : StatusEffect {
     }
 
     public override bool Countdown() {
+        target.acted = true;
         TurnsLeft--;
         if (TurnsLeft <= 0) {
-            Remove();
+          //  Remove();
             return false;
         }
-        target.acted = true;
         return true;
     }
 
     public override void Remove() {
-        target.effects.Remove(this);
     }
 
     protected override void Apply() {

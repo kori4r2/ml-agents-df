@@ -7,7 +7,14 @@ public abstract class StatusEffect {
     protected Unit target;
     protected readonly int duration;
     private int turnsLeft;
-    public int TurnsLeft { get; protected set; }
+    public int TurnsLeft {
+        get { return turnsLeft; }
+        protected set {
+            turnsLeft = value;
+            if (TurnsLeft <= 0)
+                Remove();
+        }
+    }
     public readonly string text;
     public readonly bool visible;
     // aux functions

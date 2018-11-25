@@ -10,11 +10,7 @@ public class DefUp : StatusEffect {
 
     public override bool Countdown() {
         TurnsLeft--;
-        if (TurnsLeft <= 0) {
-            Remove();
-            return false;
-        }
-        return true;
+        return (TurnsLeft > 0);
     }
 
     public override void Remove() {

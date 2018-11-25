@@ -41,6 +41,11 @@ public static class BattleManager{
     }
     public static void StartBattle() {
         Debug.Log("Battle started");
+        Unit unit = units[0];
+        // make sure skill buttons are clickable
+        foreach (Button button in unit.skillButtons) {
+            button.interactable = true;
+        }
         battleStarted = true;
         foreach (Unit u in units) {
             queue.Dequeue();
@@ -48,11 +53,19 @@ public static class BattleManager{
         StartTurn();
     }
     public static void EndBattle(char winningTeam) {
-        //to do
         Debug.Log("Battle ended");
+        Unit survivor = units[0];
+        foreach(Button button in survivor.skillButtons) {
+            button.interactable = false;
+        }
+        GameObject message = Resources.Load("WinMessage") as GameObject;
+        message.GetComponentInChildren<Text>().text += winningTeam;
+        ButtonFunctions.SetEndGame(message.GetComponent<Button>());
+        GameObject.Instantiate(message, GameObject.Find("Canvas").transform);
+        battleStarted = false;
     }
     public static void StartTurn() {
-        Debug.Log("Turn started");
+        //Debug.Log("Turn started");
         currentUnit = queue.Dequeue();
         currentUnit.outline.SetActive(true);
         MyDelegate continuation = currentUnit.CountdownEffects;
@@ -60,7 +73,6 @@ public static class BattleManager{
         continuation();
     }
     public static void ContinueTurn() {
-        Debug.Log("Continuing turn");
         if (currentUnit.CurHP > 0 && !currentUnit.acted) {
             // Update all skill buttons, and skill cooldowns
             currentUnit.SetupTurn();
@@ -70,7 +82,7 @@ public static class BattleManager{
         }
     }
     public static void EndTurn() {
-        Debug.Log("Turn ended");
+        //Debug.Log("Turn ended");
         currentUnit.acted = false;
         currentUnit.outline.SetActive(false);
         int team1Count = 0;
@@ -83,13 +95,14 @@ public static class BattleManager{
             unit.MakeUnclickable();
             unit.FadeIn();
         }
+        Debug.Log("team1count = " + team1Count + "; team2count = " + team2Count);
         if (team1Count == 0 || team2Count == 0)
             EndBattle((team1Count == 0) ? '2' : '1');
         else
             StartTurn();
     }
     public static void SkillSelected() {
-        Debug.Log("Skill selected");
+        //Debug.Log("Skill selected");
         foreach(Unit unit in units) {
             switch (selectedAction.skillType) {
                 case TARGETS.ALL:

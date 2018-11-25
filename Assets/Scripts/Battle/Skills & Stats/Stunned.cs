@@ -10,11 +10,7 @@ public class Stunned : StatusEffect {
     public override bool Countdown() {
         target.acted = true;
         TurnsLeft--;
-        if (TurnsLeft <= 0) {
-          //  Remove();
-            return false;
-        }
-        return true;
+        return (TurnsLeft > 0);
     }
 
     public override void Remove() {

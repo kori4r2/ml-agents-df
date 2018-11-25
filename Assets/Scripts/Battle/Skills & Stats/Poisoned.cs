@@ -11,11 +11,7 @@ public class Poisoned : StatusEffect {
     public override bool Countdown() {
         target.DealDamage((int)(source.Dmg * dotMultiplier), "Poison");
         TurnsLeft--;
-        if (TurnsLeft <= 0) {
-            Remove();
-            return false;
-        }
-        return true;
+        return (TurnsLeft > 0);
     }
 
     public override void Remove() {

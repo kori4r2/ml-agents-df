@@ -58,10 +58,10 @@ public static class BattleManager{
         foreach(Button button in survivor.skillButtons) {
             button.interactable = false;
         }
-        GameObject message = Resources.Load("WinMessage") as GameObject;
+
+        GameObject message = GameObject.Instantiate(Resources.Load("WinMessage") as GameObject, GameObject.Find("Canvas").transform);
         message.GetComponentInChildren<Text>().text += winningTeam;
-        ButtonFunctions.SetEndGame(message.GetComponent<Button>());
-        GameObject.Instantiate(message, GameObject.Find("Canvas").transform);
+        message.GetComponent<Button>().onClick.AddListener(ButtonFunctions.EndGame);
         battleStarted = false;
     }
     public static void StartTurn() {

@@ -10,11 +10,11 @@ public enum TARGETS {
 };
 
 public abstract class Skill {
-    private readonly int cooldown;
     private int curCD;
     protected Unit thisUnit;
     protected bool available;
     // Name of skills must be the same as the button game object names
+    public readonly int cooldown;
     public readonly string name;
     public readonly TARGETS skillType;
     public int CurCD {

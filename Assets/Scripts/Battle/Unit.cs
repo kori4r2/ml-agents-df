@@ -92,9 +92,10 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         Debug.Log("Checking hit, bth="+bonus+", def="+Def);
         return bonus > Def;
     }
-    public void DealDamage(int value, string element = "None") {
+    public int DealDamage(int value, string element = "None") {
         Debug.Log("Dealing "+value+" damage");
         CurHP -= (int)(value * GetMultiplier(element));
+        return (int)(value * GetMultiplier(element));
     }
     public void Purge() {
         foreach (StatusEffect status in effects)

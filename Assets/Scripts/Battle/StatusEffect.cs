@@ -5,7 +5,6 @@ using UnityEngine;
 public abstract class StatusEffect {
     protected Unit source;
     protected Unit target;
-    protected readonly int duration;
     private int turnsLeft;
     public int TurnsLeft {
         get { return turnsLeft; }
@@ -15,6 +14,7 @@ public abstract class StatusEffect {
                 Remove();
         }
     }
+    public readonly int duration;
     public readonly string text;
     public readonly bool visible;
     // aux functions

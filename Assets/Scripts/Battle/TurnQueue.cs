@@ -27,8 +27,10 @@ public class TurnQueue {
         queue.Add(newUnit);
     }
     public Unit Dequeue() {
-        if (queue.Count < 1)
+        if (queue.Count < 1) {
+            BattleManager.turnCounter++;
             RollInitiative();
+        }
         backupList.Add(queue[0]);
         queue.RemoveAt(0);
         return backupList[backupList.Count-1];

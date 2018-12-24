@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Stun : Skill {
+    private int damage;
     public Stun(Unit unit) :
         base(unit, "Stun", 10, TARGETS.ENEMIES) {
     }
@@ -14,9 +15,10 @@ public class Stun : Skill {
         // check hit on target
         if (thisUnit.lastAtkHit = BattleManager.targetUnit.CheckHit(thisUnit.Atk)) {
             // deal damage as needed - 1 90% hit
-            BattleManager.targetUnit.DealDamage((int)(thisUnit.Dmg * 0.9f));
+            damage += BattleManager.targetUnit.DealDamage((int)(thisUnit.Dmg * 0.9f));
             // apply the Stunned status effect
             BattleManager.targetUnit.AddEffect(new Stunned(thisUnit, BattleManager.targetUnit));
         }
+        BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
     }
 }

@@ -5,13 +5,30 @@ using UnityEngine.UI;
 
 public delegate void MyDelegate();
 
-public static class BattleManager{
+public static class BattleManager {
     public static List<Unit> units = new List<Unit>();
     public static Unit currentUnit;
-    public static Skill selectedAction;
     public static Unit targetUnit;
+    public static Skill selectedAction;
     public static int expectedNUnits = 4;
+    public static int turnCounter = -1;
+    private static bool waiting;
     private static bool battleStarted = false;
+    private static Text logObject;
+    public static string BattleLog {
+        get { return logObject.text; }
+        set {
+            string[] split = value.Split(new char[]{'\n'}, System.StringSplitOptions.RemoveEmptyEntries);
+            if (split.Length <= 0)
+                logObject.text = "";
+            else {
+                logObject.text = turnCounter +": "+ split[split.Length-1]+"\n";
+                for (int i = 0; i < split.Length - 1; i++) {
+                    logObject.text += split[i] + "\n";
+                }
+            }
+        }
+    }
     private static int nUnits;
     public static int NUnits {
         get {
@@ -50,6 +67,8 @@ public static class BattleManager{
         foreach (Unit u in units) {
             queue.Dequeue();
         }
+        turnCounter = 0;
+        logObject = GameObject.Find("BattleLog").GetComponentInChildren<Text>();
         StartTurn();
     }
     public static void EndBattle(char winningTeam) {
@@ -66,17 +85,44 @@ public static class BattleManager{
     }
     public static void StartTurn() {
         //Debug.Log("Turn started");
+        waiting = false;
         currentUnit = queue.Dequeue();
         currentUnit.outline.SetActive(true);
         MyDelegate continuation = currentUnit.CountdownEffects;
         continuation += ContinueTurn;
         continuation();
     }
+    private static IEnumerator WaitSeconds(float dur) {
+        waiting = true;
+        float duration = dur;
+        yield return new WaitForSeconds(dur);
+        waiting = false;
+    }
+    public static void Wait3Seconds() {
+        waiting = true;
+        currentUnit.StartCoroutine(WaitSeconds(1.0f));
+    }
+    private static IEnumerator WaitingForWait() {
+        while (waiting)
+            yield return new WaitForSeconds(0.1f);
+        currentUnit.GetComponent<UnitAgent>().RequestDecision();
+    }
+    private static void WaitToGetAction() {
+        currentUnit.StartCoroutine(WaitingForWait());
+    }
     public static void ContinueTurn() {
         if (currentUnit.CurHP > 0 && !currentUnit.acted) {
             // Update all skill buttons, and skill cooldowns
-            currentUnit.SetupTurn();
+            MyDelegate orderedFunctions = currentUnit.SetupTurn;
+            // If it is not the player, get decision of movement from brain
+            if (currentUnit.GetComponent<UnitAgent>().brain.brainType != MLAgents.BrainType.Player) {
+                orderedFunctions += Wait3Seconds;
+                orderedFunctions += WaitToGetAction;
+            }
+            orderedFunctions();
         } else {
+            if (currentUnit.statusUI.text.Contains("Stunned"))
+                BattleLog += currentUnit.name+"->Stunned";
             Debug.Log(currentUnit.name + " has " + ((currentUnit.acted) ? "" : "not ") + "acted, " + currentUnit.CurHP + " HP left");
             EndTurn();
         }

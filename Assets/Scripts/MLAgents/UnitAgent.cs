@@ -140,7 +140,7 @@ public class UnitAgent : Agent {
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
         // Get HP of enemy 2
         AddVectorObs((enemy2.CurHP - 0.0f) / (enemy2.MaxHP - 0.0f));
-        if (enemy1.CurHP <= 0) {
+        if (enemy2.CurHP <= 0) {
             SetActionMask((int)DECISION.AttackEnemy2);
             SetActionMask((int)DECISION.DoubleEnemy2);
             SetActionMask((int)DECISION.PoisonEnemy2);

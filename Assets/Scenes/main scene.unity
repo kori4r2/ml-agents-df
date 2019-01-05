@@ -375,7 +375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76dd32bcedd55aa47805503006727cf6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  logic: 0
+  logic: 1
 --- !u!1 &47423266
 GameObject:
   m_ObjectHideFlags: 0
@@ -1631,14 +1631,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71513ae8573fe1a4bb3e5b3a68a8f9a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 2112753956}
+  brain: {fileID: 22995502}
   agentParameters:
     agentCameras: []
     maxStep: 0
     resetOnDone: 1
     onDemandDecision: 1
     numberOfActionsBetweenDecisions: 1
-  type: 0
+  type: 1
 --- !u!1 &393473325
 GameObject:
   m_ObjectHideFlags: 0
@@ -1877,7 +1877,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71513ae8573fe1a4bb3e5b3a68a8f9a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 22995502}
+  brain: {fileID: 1956380275}
   agentParameters:
     agentCameras: []
     maxStep: 0
@@ -7112,14 +7112,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71513ae8573fe1a4bb3e5b3a68a8f9a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 2112753956}
+  brain: {fileID: 22995502}
   agentParameters:
     agentCameras: []
     maxStep: 0
     resetOnDone: 1
     onDemandDecision: 1
     numberOfActionsBetweenDecisions: 1
-  type: 0
+  type: 1
 --- !u!114 &1887706074
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8019,7 +8019,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71513ae8573fe1a4bb3e5b3a68a8f9a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brain: {fileID: 22995502}
+  brain: {fileID: 1956380275}
   agentParameters:
     agentCameras: []
     maxStep: 0

@@ -94,7 +94,6 @@ public static class BattleManager {
     }
     private static IEnumerator WaitSeconds(float dur) {
         waiting = true;
-        float duration = dur;
         yield return new WaitForSeconds(dur);
         waiting = false;
     }

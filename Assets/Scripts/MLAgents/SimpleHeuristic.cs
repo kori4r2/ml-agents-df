@@ -39,7 +39,7 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
             // Emergency heal
             if (vectorObs[(int)OBSERVATION.HealCooldown] <= 0.0f && selfCriticalHP)
                 decision[0] = (int)DECISION.HealSelf;
-            else if (vectorObs[(int)OBSERVATION.HealCooldown] <= 0 && allyCriticalHP)
+            else if (vectorObs[(int)OBSERVATION.HealCooldown] <= 0.0f && allyCriticalHP)
                 decision[0] = (int)DECISION.HealAlly;
             else {
                 // Stun is OP, if you can stun someone, DO IT
@@ -54,7 +54,7 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
                         decision[0] = (int)DECISION.StunEnemy2;
                 // If you or your friend needs a heal and have no shields up, they should be healed
                 } else if (vectorObs[(int)OBSERVATION.HealCooldown] <= 0.0f && (selfVulnerable || allyVulnerable)) {
-                    // Heal
+                    // Heal the one with lower hp
                     if (vectorObs[(int)OBSERVATION.SelfHP] <= vectorObs[(int)OBSERVATION.AllyHP])
                         decision[0] = (int)DECISION.HealSelf;
                     else
@@ -71,7 +71,7 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
                         decision[0] = (int)DECISION.BlindEnemy2;
                 // If any of the damage skills can be reliably used, its better than attack
                 } else if ((canHitEnemy1 || canHitEnemy2) && vectorObs[(int)OBSERVATION.SelfBlinded] <= 0.0f &&
-                           (vectorObs[(int)OBSERVATION.PoisonCooldown] <= 0.0f || (vectorObs[(int)OBSERVATION.DoubleCooldown] < 0.0f && vectorObs[(int)OBSERVATION.LastAtkHit] == 0.0f)) ) {
+                           (vectorObs[(int)OBSERVATION.PoisonCooldown] <= 0.0f || (vectorObs[(int)OBSERVATION.DoubleCooldown] <= 0.0f && vectorObs[(int)OBSERVATION.LastAtkHit] == 1.0f)) ) {
                     // Offensive skills
                     if (vectorObs[(int)OBSERVATION.PoisonCooldown] <= 0.0f)
                         decision[0] = (canHitEnemy1) ? (int)DECISION.PoisonEnemy1 : (int)DECISION.PoisonEnemy2;

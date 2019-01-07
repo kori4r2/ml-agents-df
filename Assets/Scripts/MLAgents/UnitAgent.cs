@@ -60,7 +60,7 @@ public class UnitAgent : Agent {
         Cooperative
     };
     public TYPEAGENT type;
-    Unit self, ally = null, enemy1 = null, enemy2 = null, aux;
+    public Unit self, ally = null, enemy1 = null, enemy2 = null, aux;
 
 	// Use this for initialization
 	void Start () {

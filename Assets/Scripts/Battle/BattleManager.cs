@@ -120,8 +120,24 @@ public static class BattleManager {
             }
             orderedFunctions();
         } else {
+            // In case of stun, put a notification on the battle log
             if (currentUnit.statusUI.text.Contains("Stunned"))
                 BattleLog += currentUnit.name+"->Stunned";
+            // In case of death, distribute rewards
+            else {
+                if (currentUnit.CurHP <= 0) {
+                    UnitAgent currentAgent = currentUnit.GetComponent<UnitAgent>();
+                    // Give rewards for enemies
+                    if(currentAgent.enemy1.CurHP >= 0 || currentAgent.enemy1.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
+                        currentAgent.enemy1.GetComponent<UnitAgent>().AddReward(0.5f);
+                    if (currentAgent.enemy2.CurHP >= 0 || currentAgent.enemy2.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
+                        currentAgent.enemy2.GetComponent<UnitAgent>().AddReward(0.5f);
+                    // Give punishments for self and ally (if needed)
+                    currentAgent.AddReward((currentAgent.type == UnitAgent.TYPEAGENT.Individualistic) ? -1.0f : -0.5f);
+                    if (currentAgent.ally.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
+                        currentAgent.ally.GetComponent<UnitAgent>().AddReward(-0.5f);
+                }
+            }
             Debug.Log(currentUnit.name + " has " + ((currentUnit.acted) ? "" : "not ") + "acted, " + currentUnit.CurHP + " HP left");
             EndTurn();
         }
@@ -187,6 +203,15 @@ public static class BattleManager {
     public static void TargetSelected() {
         Debug.Log("Target selected, "+currentUnit.name+" used "+selectedAction.name+" on "+targetUnit.name);
         selectedAction.Use();
+        // Give rewards for enemies killed and negative rewards for deaths
+        if (targetUnit.CurHP <= 0) {
+            currentUnit.GetComponent<UnitAgent>().AddReward(0.5f);
+            currentUnit.GetComponent<UnitAgent>().ally.GetComponent<UnitAgent>().AddReward(0.5f);
+            UnitAgent targetAgent = targetUnit.GetComponent<UnitAgent>();
+            targetAgent.AddReward((targetAgent.type == UnitAgent.TYPEAGENT.Individualistic)? -1.0f : -0.5f);
+            if (targetAgent.ally.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
+                targetAgent.ally.GetComponent<UnitAgent>().AddReward(-0.5f);
+        }
         EndTurn();
     }
 }

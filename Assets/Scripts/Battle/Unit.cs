@@ -170,6 +170,14 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         BattleManager.Add(this);
 	}
 
-    private void Update() {
+    public void Reset() {
+        FadeIn();
+        Purge();
+        curHP = MaxHP;
+        CurHP = curHP;
+        CurMP = MaxMP;
+        foreach (Skill skill in skillList)
+            skill.ResetCooldown();
+        MakeUnclickable();
     }
 }

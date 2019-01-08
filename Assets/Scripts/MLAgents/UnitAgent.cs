@@ -81,6 +81,7 @@ public class UnitAgent : Agent {
 	}
 
     public override void CollectObservations() {
+        Debug.Log(self.name + " observing");
         // Get number of current turn (allows the brain to notice when they have been stunned)
         AddVectorObs((BattleManager.turnCounter - 0.0f)/(200.0f));
         // Adds if the last attack hit
@@ -191,6 +192,7 @@ public class UnitAgent : Agent {
     }
 
     public override void AgentAction(float[] vectorAction, string textAction) {
+        Debug.Log(self.name + " acting");
         DECISION decision = (DECISION)vectorAction[0];
         switch (decision) {
             case DECISION.AttackEnemy1:
@@ -247,5 +249,11 @@ public class UnitAgent : Agent {
                 break;
         }
         BattleManager.TargetSelected();
+    }
+
+    public override void AgentReset() {
+        Debug.Log("agent was reset");
+        self.Reset();
+        base.AgentReset();
     }
 }

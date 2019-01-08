@@ -12,6 +12,7 @@ public static class BattleManager {
     public static Skill selectedAction;
     public static int expectedNUnits = 4;
     public static int turnCounter = -1;
+    private static DFAcademy academy;
     private static bool waiting;
     private static bool battleStarted = false;
     private static Text logObject;
@@ -57,13 +58,25 @@ public static class BattleManager {
         NUnits++;
     }
     public static void StartBattle() {
+        battleStarted = true;
+        // Code added to allow for replaying the battle
+        if (NUnits < expectedNUnits) {
+            GameObject[] objs = GameObject.FindGameObjectsWithTag("Player");
+            foreach(GameObject obj in objs) {
+                Unit aux = obj.GetComponent<Unit>();
+                if (!units.Contains(aux)) {
+                    Add(aux);
+                }
+            }
+        }
+        academy = GameObject.Find("Academy").GetComponent<DFAcademy>();
+
         Debug.Log("Battle started");
         Unit unit = units[0];
         // make sure skill buttons are clickable
         foreach (Button button in unit.skillButtons) {
             button.interactable = true;
         }
-        battleStarted = true;
         foreach (Unit u in units) {
             queue.Dequeue();
         }
@@ -77,11 +90,26 @@ public static class BattleManager {
         foreach(Button button in survivor.skillButtons) {
             button.interactable = false;
         }
+        foreach (Unit u in units) {
+            queue.Remove(u);
+            NUnits--;
+        }
+        units.Clear();
 
-        GameObject message = GameObject.Instantiate(Resources.Load("WinMessage") as GameObject, GameObject.Find("Canvas").transform);
-        message.GetComponentInChildren<Text>().text += winningTeam;
-        message.GetComponent<Button>().onClick.AddListener(ButtonFunctions.EndGame);
         battleStarted = false;
+        //if (!academy.GetIsInference()) {
+          //  GameObject message = GameObject.Instantiate(Resources.Load("WinMessage") as GameObject, GameObject.Find("Canvas").transform);
+          //  message.GetComponentInChildren<Text>().text += winningTeam;
+          //  message.GetComponent<Button>().onClick.AddListener(ButtonFunctions.EndGame);
+        //} else {
+            GameObject[] objs = GameObject.FindGameObjectsWithTag("Player");
+            foreach(GameObject obj in objs) {
+                obj.GetComponent<UnitAgent>().Done();
+            }
+            academy.AcademyReset();
+            StartBattle();
+        //}
+        
     }
     public static void StartTurn() {
         //Debug.Log("Turn started");
@@ -99,7 +127,7 @@ public static class BattleManager {
     }
     public static void Wait3Seconds() {
         waiting = true;
-        currentUnit.StartCoroutine(WaitSeconds(1.0f));
+        currentUnit.StartCoroutine(WaitSeconds(0.1f));
     }
     private static IEnumerator WaitingForWait() {
         while (waiting)

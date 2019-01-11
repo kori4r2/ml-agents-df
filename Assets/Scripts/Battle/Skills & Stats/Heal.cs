@@ -5,7 +5,7 @@ using UnityEngine;
 public class Heal : Skill {
     private int damage;
     public Heal(Unit unit) :
-        base(unit, "Heal", 15, TARGETS.ALLIES) {
+        base(unit, "Heal", 20, TARGETS.ALLIES) {
     }
 
     public override bool Available { get; protected set; }

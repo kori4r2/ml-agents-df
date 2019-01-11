@@ -61,7 +61,7 @@ public class UnitAgent : Agent {
     };
     public TYPEAGENT type;
     public Unit self, ally = null, enemy1 = null, enemy2 = null, aux;
-
+    
 	// Use this for initialization
 	void Start () {
         self = gameObject.GetComponent<Unit>();
@@ -79,9 +79,15 @@ public class UnitAgent : Agent {
             aux = (i + 1 < units.Length) ? units[i + 1].GetComponent<Unit>() : null;
         }
 	}
+    /*
+    public void RequestDecision(int a) {
+        Debug.Log("a decision was requested from " + name);
+        RequestDecision();
+    }
+    */
 
     public override void CollectObservations() {
-        Debug.Log(self.name + " observing");
+        //Debug.Log(self.name + " observing");
         // Get number of current turn (allows the brain to notice when they have been stunned)
         AddVectorObs((BattleManager.turnCounter - 0.0f)/(200.0f));
         // Adds if the last attack hit
@@ -192,7 +198,7 @@ public class UnitAgent : Agent {
     }
 
     public override void AgentAction(float[] vectorAction, string textAction) {
-        Debug.Log(self.name + " acting");
+        //Debug.Log(self.name + " acting");
         DECISION decision = (DECISION)vectorAction[0];
         switch (decision) {
             case DECISION.AttackEnemy1:
@@ -241,19 +247,18 @@ public class UnitAgent : Agent {
                 break;
             case DECISION.HealSelf:
                 BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Heal");
-                BattleManager.targetUnit = enemy1;
+                BattleManager.targetUnit = self;
                 break;
             case DECISION.HealAlly:
                 BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Heal");
-                BattleManager.targetUnit = enemy2;
+                BattleManager.targetUnit = ally;
                 break;
         }
         BattleManager.TargetSelected();
     }
 
     public override void AgentReset() {
-        Debug.Log("agent was reset");
+        //Debug.Log("agent was reset");
         self.Reset();
-        base.AgentReset();
     }
 }

@@ -59,17 +59,17 @@ public static class BattleManager {
     }
     public static void StartBattle() {
         battleStarted = true;
+        academy = GameObject.Find("Academy").GetComponent<DFAcademy>();
         // Code added to allow for replaying the battle
-        if (NUnits < expectedNUnits) {
-            GameObject[] objs = GameObject.FindGameObjectsWithTag("Player");
-            foreach(GameObject obj in objs) {
-                Unit aux = obj.GetComponent<Unit>();
+        if (NUnits == 0) {
+            //int i = 0;
+            foreach(UnitAgent agent in academy.agents) {
+                Unit aux = agent.gameObject.GetComponent<Unit>();
                 if (!units.Contains(aux)) {
                     Add(aux);
                 }
             }
         }
-        academy = GameObject.Find("Academy").GetComponent<DFAcademy>();
 
         Debug.Log("Battle started");
         Unit unit = units[0];
@@ -97,18 +97,18 @@ public static class BattleManager {
         units.Clear();
 
         battleStarted = false;
-        //if (!academy.GetIsInference()) {
-          //  GameObject message = GameObject.Instantiate(Resources.Load("WinMessage") as GameObject, GameObject.Find("Canvas").transform);
-          //  message.GetComponentInChildren<Text>().text += winningTeam;
-          //  message.GetComponent<Button>().onClick.AddListener(ButtonFunctions.EndGame);
-        //} else {
-            GameObject[] objs = GameObject.FindGameObjectsWithTag("Player");
-            foreach(GameObject obj in objs) {
-                obj.GetComponent<UnitAgent>().Done();
+        if (!academy.HasTrainingBrain()) {
+            GameObject message = GameObject.Instantiate(Resources.Load("WinMessage") as GameObject, GameObject.Find("Canvas").transform);
+            message.GetComponentInChildren<Text>().text += winningTeam;
+            message.GetComponent<Button>().onClick.AddListener(ButtonFunctions.EndGame);
+        } else {
+            foreach(UnitAgent agent in academy.agents) {
+                agent.gameObject.GetComponent<UnitAgent>().Done();
             }
-            academy.AcademyReset();
-            StartBattle();
-        //}
+            MyDelegate resetBattle = academy.AcademyReset;
+            resetBattle += StartBattle;
+            resetBattle();
+        }
         
     }
     public static void StartTurn() {
@@ -121,8 +121,10 @@ public static class BattleManager {
         continuation();
     }
     private static IEnumerator WaitSeconds(float dur) {
+        //Debug.Log("waiting started");
         waiting = true;
         yield return new WaitForSeconds(dur);
+        //Debug.Log("waiting ended");
         waiting = false;
     }
     public static void Wait3Seconds() {
@@ -132,12 +134,14 @@ public static class BattleManager {
     private static IEnumerator WaitingForWait() {
         while (waiting)
             yield return new WaitForSeconds(0.1f);
+        //Debug.Log("requesting decision from " + currentUnit.name);
         currentUnit.GetComponent<UnitAgent>().RequestDecision();
     }
     private static void WaitToGetAction() {
         currentUnit.StartCoroutine(WaitingForWait());
     }
     public static void ContinueTurn() {
+        Debug.Log("continuing turn");
         if (currentUnit.CurHP > 0 && !currentUnit.acted) {
             // Update all skill buttons, and skill cooldowns
             MyDelegate orderedFunctions = currentUnit.SetupTurn;
@@ -156,14 +160,18 @@ public static class BattleManager {
                 if (currentUnit.CurHP <= 0) {
                     UnitAgent currentAgent = currentUnit.GetComponent<UnitAgent>();
                     // Give rewards for enemies
-                    if(currentAgent.enemy1.CurHP >= 0 || currentAgent.enemy1.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-                        currentAgent.enemy1.GetComponent<UnitAgent>().AddReward(0.5f);
-                    if (currentAgent.enemy2.CurHP >= 0 || currentAgent.enemy2.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-                        currentAgent.enemy2.GetComponent<UnitAgent>().AddReward(0.5f);
+                    if(currentAgent.enemy1.CurHP > 0 || currentAgent.enemy1.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
+                        if(currentAgent.enemy1.GetComponent<UnitAgent>().brain.brainType == MLAgents.BrainType.External)
+                            currentAgent.enemy1.GetComponent<UnitAgent>().AddReward(0.5f);
+                    if (currentAgent.enemy2.CurHP > 0 || currentAgent.enemy2.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
+                        if (currentAgent.enemy2.GetComponent<UnitAgent>().brain.brainType == MLAgents.BrainType.External)
+                            currentAgent.enemy2.GetComponent<UnitAgent>().AddReward(0.5f);
                     // Give punishments for self and ally (if needed)
-                    currentAgent.AddReward((currentAgent.type == UnitAgent.TYPEAGENT.Individualistic) ? -1.0f : -0.5f);
+                    if (currentAgent.brain.brainType == MLAgents.BrainType.External)
+                        currentAgent.AddReward((currentAgent.type == UnitAgent.TYPEAGENT.Individualistic) ? -1.0f : -0.5f);
                     if (currentAgent.ally.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-                        currentAgent.ally.GetComponent<UnitAgent>().AddReward(-0.5f);
+                        if (currentAgent.ally.GetComponent<UnitAgent>().brain.brainType == MLAgents.BrainType.External)
+                            currentAgent.ally.GetComponent<UnitAgent>().AddReward(-0.5f);
                 }
             }
             Debug.Log(currentUnit.name + " has " + ((currentUnit.acted) ? "" : "not ") + "acted, " + currentUnit.CurHP + " HP left");
@@ -233,12 +241,16 @@ public static class BattleManager {
         selectedAction.Use();
         // Give rewards for enemies killed and negative rewards for deaths
         if (targetUnit.CurHP <= 0) {
-            currentUnit.GetComponent<UnitAgent>().AddReward(0.5f);
-            currentUnit.GetComponent<UnitAgent>().ally.GetComponent<UnitAgent>().AddReward(0.5f);
+            if (currentUnit.GetComponent<UnitAgent>().brain.brainType == MLAgents.BrainType.External)
+                currentUnit.GetComponent<UnitAgent>().AddReward(0.5f);
+            if (currentUnit.GetComponent<UnitAgent>().ally.GetComponent<UnitAgent>().brain.brainType == MLAgents.BrainType.External)
+                currentUnit.GetComponent<UnitAgent>().ally.GetComponent<UnitAgent>().AddReward(0.5f);
             UnitAgent targetAgent = targetUnit.GetComponent<UnitAgent>();
-            targetAgent.AddReward((targetAgent.type == UnitAgent.TYPEAGENT.Individualistic)? -1.0f : -0.5f);
+            if (targetAgent.brain.brainType == MLAgents.BrainType.External)
+                targetAgent.AddReward((targetAgent.type == UnitAgent.TYPEAGENT.Individualistic)? -1.0f : -0.5f);
             if (targetAgent.ally.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-                targetAgent.ally.GetComponent<UnitAgent>().AddReward(-0.5f);
+                if (targetAgent.ally.GetComponent<UnitAgent>().brain.brainType == MLAgents.BrainType.External)
+                    targetAgent.ally.GetComponent<UnitAgent>().AddReward(-0.5f);
         }
         EndTurn();
     }

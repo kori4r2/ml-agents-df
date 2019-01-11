@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Block : Skill {
     public Block(Unit unit) :
-        base(unit, "Block", 6, TARGETS.SELF) {
+        base(unit, "Block", 8, TARGETS.SELF) {
     }
 
     public override bool Available { get; protected set; }

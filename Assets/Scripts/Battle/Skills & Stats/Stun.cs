@@ -5,7 +5,7 @@ using UnityEngine;
 public class Stun : Skill {
     private int damage;
     public Stun(Unit unit) :
-        base(unit, "Stun", 10, TARGETS.ENEMIES) {
+        base(unit, "Stun", 12, TARGETS.ENEMIES) {
     }
 
     public override bool Available { get; protected set; }

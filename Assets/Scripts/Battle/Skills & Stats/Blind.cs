@@ -5,7 +5,7 @@ using UnityEngine;
 public class Blind : Skill {
     private int damage;
     public Blind(Unit unit) :
-        base(unit, "Blind", 8, TARGETS.ENEMIES) {
+        base(unit, "Blind", 10, TARGETS.ENEMIES) {
     }
 
     public override bool Available { get; protected set; }

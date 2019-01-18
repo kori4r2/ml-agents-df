@@ -69,7 +69,8 @@ public class UnitAgent : Agent {
         aux = units[0].GetComponent<Unit>();
         for (int i = 0; i < units.Length; i++) {
             if (aux.team.Equals(self.team)) {
-                ally = aux;
+                if(!aux.name.Equals(self.name))
+                    ally = aux;
             }else {
                 if (enemy1 == null)
                     enemy1 = aux;
@@ -78,7 +79,9 @@ public class UnitAgent : Agent {
             }
             aux = (i + 1 < units.Length) ? units[i + 1].GetComponent<Unit>() : null;
         }
+        Debug.Log(self.name + " has " + ally.name + " as ally, " + enemy1.name + " as enemy1 and " + enemy2.name + " as enemy2");
 	}
+
     /*
     public void RequestDecision(int a) {
         Debug.Log("a decision was requested from " + name);
@@ -87,6 +90,7 @@ public class UnitAgent : Agent {
     */
 
     public override void CollectObservations() {
+        Debug.Log("Calculated reward = " + GetReward());
         //Debug.Log(self.name + " observing");
         // Get number of current turn (allows the brain to notice when they have been stunned)
         AddVectorObs((BattleManager.turnCounter - 0.0f)/(200.0f));
@@ -196,6 +200,11 @@ public class UnitAgent : Agent {
             AddVectorObs(0.0f);
         }
     }
+    // Debug function
+    public void AddReward(float value, bool aux) {
+        Debug.Log("Changing reward of agent " + name);
+        AddReward(value);
+    }
 
     public override void AgentAction(float[] vectorAction, string textAction) {
         //Debug.Log(self.name + " acting");
@@ -254,6 +263,14 @@ public class UnitAgent : Agent {
                 BattleManager.targetUnit = ally;
                 break;
         }
+        /*
+        // Recalculate reward (Might be unnecessary if rewards are cumulative)
+        SetReward(0.0f);
+        if (enemy1.CurHP <= 0 || enemy2.CurHP <= 0)
+            AddReward(0.5f);
+        if (type == TYPEAGENT.Cooperative && ally.CurHP <= 0)
+            AddReward(-0.5f);
+        */
         BattleManager.TargetSelected();
     }
 

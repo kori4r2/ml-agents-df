@@ -179,5 +179,8 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         foreach (Skill skill in skillList)
             skill.ResetCooldown();
         MakeUnclickable();
+        outline.SetActive(false);
+        if(!BattleManager.units.Contains(this))
+            BattleManager.Add(this);
     }
 }

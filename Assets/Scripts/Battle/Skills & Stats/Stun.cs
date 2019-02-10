@@ -19,6 +19,7 @@ public class Stun : Skill {
             // apply the Stunned status effect
             BattleManager.targetUnit.AddEffect(new Stunned(thisUnit, BattleManager.targetUnit));
         }
-        BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
+        if (!BattleManager.academy.HasTrainingBrain())
+            BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
     }
 }

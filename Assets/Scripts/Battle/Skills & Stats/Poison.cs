@@ -16,9 +16,10 @@ public class Poison : Skill {
         if (thisUnit.lastAtkHit = BattleManager.targetUnit.CheckHit(thisUnit.Atk)) {
             // deal damage as needed - 1 30% hit
             damage += BattleManager.targetUnit.DealDamage((int)(thisUnit.Dmg * 0.3f));
-            // apply the Stunned status effect
+            // apply the Poisoned status effect
             BattleManager.targetUnit.AddEffect(new Poisoned(thisUnit, BattleManager.targetUnit));
         }
-        BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
+        if (!BattleManager.academy.HasTrainingBrain())
+            BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
     }
 }

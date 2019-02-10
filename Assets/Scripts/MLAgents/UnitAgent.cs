@@ -60,14 +60,15 @@ public class UnitAgent : Agent {
         Cooperative
     };
     public TYPEAGENT type;
-    public Unit self, ally = null, enemy1 = null, enemy2 = null, aux;
+    public Unit self = null, ally = null, enemy1 = null, enemy2 = null;
+    private bool hasStarted;
     
 	// Use this for initialization
 	void Start () {
         self = gameObject.GetComponent<Unit>();
         GameObject[] units = GameObject.FindGameObjectsWithTag("Player");
-        aux = units[0].GetComponent<Unit>();
         for (int i = 0; i < units.Length; i++) {
+            Unit aux = units[i].GetComponent<Unit>();
             if (aux.team.Equals(self.team)) {
                 if(!aux.name.Equals(self.name))
                     ally = aux;
@@ -77,20 +78,12 @@ public class UnitAgent : Agent {
                 else
                     enemy2 = aux;
             }
-            aux = (i + 1 < units.Length) ? units[i + 1].GetComponent<Unit>() : null;
         }
+        hasStarted = false;
         Debug.Log(self.name + " has " + ally.name + " as ally, " + enemy1.name + " as enemy1 and " + enemy2.name + " as enemy2");
 	}
 
-    /*
-    public void RequestDecision(int a) {
-        Debug.Log("a decision was requested from " + name);
-        RequestDecision();
-    }
-    */
-
     public override void CollectObservations() {
-        Debug.Log("Calculated reward = " + GetReward());
         //Debug.Log(self.name + " observing");
         // Get number of current turn (allows the brain to notice when they have been stunned)
         AddVectorObs((BattleManager.turnCounter - 0.0f)/(200.0f));
@@ -199,15 +192,18 @@ public class UnitAgent : Agent {
             AddVectorObs(0.0f);
             AddVectorObs(0.0f);
         }
-    }
-    // Debug function
-    public void AddReward(float value, bool aux) {
-        Debug.Log("Changing reward of agent " + name);
-        AddReward(value);
+        Debug.Log("Calculated reward at obs= " + GetCumulativeReward());
     }
 
     public override void AgentAction(float[] vectorAction, string textAction) {
         //Debug.Log(self.name + " acting");
+        // Set initial reward
+        /*
+        if (!hasStarted) {
+            hasStarted = true;
+            SetReward(0.5f);
+        }
+        */
         DECISION decision = (DECISION)vectorAction[0];
         switch (decision) {
             case DECISION.AttackEnemy1:
@@ -271,11 +267,13 @@ public class UnitAgent : Agent {
         if (type == TYPEAGENT.Cooperative && ally.CurHP <= 0)
             AddReward(-0.5f);
         */
+        Debug.Log("Calculated reward at action = " + GetCumulativeReward());
         BattleManager.TargetSelected();
     }
 
     public override void AgentReset() {
         //Debug.Log("agent was reset");
         self.Reset();
+        hasStarted = false;
     }
 }

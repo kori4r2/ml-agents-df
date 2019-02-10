@@ -13,6 +13,7 @@ public class Block : Skill {
         base.Use();
         // Apply defense boost to self
         BattleManager.targetUnit.AddEffect(new DefUp(thisUnit, thisUnit));
-        BattleManager.BattleLog += thisUnit.name + "->" + name;
+        if (!BattleManager.academy.HasTrainingBrain())
+            BattleManager.BattleLog += thisUnit.name + "->" + name;
     }
 }

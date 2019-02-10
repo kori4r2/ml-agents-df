@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Blinded : StatusEffect {
-    private int negativeBth = 45;
+    private int negativeBth = 55;
     public Blinded(Unit src, Unit trgt, int duration=4) :
         base(src, trgt, "Blinded", duration) {
     }

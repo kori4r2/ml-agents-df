@@ -29,6 +29,7 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
     private int bth;
     [SerializeField]
     private int initiative;
+    private int lastInitRoll;
     public char team;
     public bool acted;
     public bool lastAtkHit;
@@ -47,7 +48,8 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         private set {
             if (curHP > 0) {
                 curHP = (value <= 0) ? 0 : (value > MaxHP)? MaxHP : value;
-                hpUI.text = "HP =             " + curHP.ToString().PadLeft((int)System.Math.Floor(System.Math.Log10(MaxHP)+1)) + " /"+MaxHP;
+                if (!BattleManager.academy.HasTrainingBrain())
+                    hpUI.text = "HP =             " + curHP.ToString().PadLeft((int)System.Math.Floor(System.Math.Log10(MaxHP)+1)) + " /"+MaxHP;
                 if (curHP <= 0) {
                     BattleManager.Kill(this);
                 }
@@ -62,16 +64,19 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
     public int Def { get { return def; } set { def = value; } }
     public int Bth { get { return bth; } set { bth = value; } }
     public int Initiative { get { return initiative; } set { initiative = value; } }
+    public int LastInitRoll { get { return lastInitRoll; } }
     public int Dmg { get { return DmgRoll(); } }
     public int Atk { get { return AtkRoll(); } }
     // Aux variables
     public List<StatusEffect> effects;
     public List<Skill> skillList;
     // Aux functions
+    public int RollInitiative() {
+        lastInitRoll = Random.Range(1, 100) + Initiative;
+        return lastInitRoll;
+    }
     public int CompareTo(Unit unit) {
-        int myRoll = Random.Range(1, 100) + Initiative;
-        int enemyRoll = Random.Range(1, 100) + unit.Initiative;
-        return enemyRoll.CompareTo(myRoll);
+        return unit.LastInitRoll.CompareTo(LastInitRoll);
     }
     private int AtkRoll() {
         return Bth + Random.Range(0, 100);
@@ -114,6 +119,8 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
     }
     // UI related functions
     public void UpdateStatusUI() {
+        if (BattleManager.academy.HasTrainingBrain())
+            return;
         string newStatusUI = "";
         foreach (StatusEffect status in effects) {
             newStatusUI += status.text + "(" + status.TurnsLeft + ")" + System.Environment.NewLine;
@@ -125,27 +132,40 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         // Update all skill buttons
         for (int i = 0; i < skillList.Count; i++) {
             skillList[i].CurCD--;
-            skillButtons[i].gameObject.GetComponentInChildren<Text>().text =
+            if (!BattleManager.academy.HasTrainingBrain()) {
+                skillButtons[i].gameObject.GetComponentInChildren<Text>().text =
                 (skillList[i].CurCD <= 0) ? skillList[i].name : skillList[i].CurCD.ToString();
-            skillButtons[i].interactable = skillList[i].Available;
+                skillButtons[i].interactable = skillList[i].Available;
+            }
         }
     }
     public void MakeClickable() {
+        if (BattleManager.academy.HasTrainingBrain())
+            return;
         selectButton.gameObject.GetComponent<Image>().raycastTarget = true;
     }
     public void MakeUnclickable() {
+        if (BattleManager.academy.HasTrainingBrain())
+            return;
         selectButton.gameObject.GetComponent<Image>().raycastTarget = false;
     }
     public void FadeOut() {
+        if (BattleManager.academy.HasTrainingBrain())
+            return;
         selectButton.interactable = false;
     }
     public void FadeIn() {
+        if (BattleManager.academy.HasTrainingBrain())
+            return;
         selectButton.interactable = true;
     }
 
     // Use this for initialization
     void Start () {
-        nameUI.text = name;
+        if(BattleManager.academy == null)
+            BattleManager.academy = GameObject.Find("Academy").GetComponent<DFAcademy>();
+        if (!BattleManager.academy.HasTrainingBrain())
+            nameUI.text = name;
         CurHP = maxHP;
         CurMP = maxMP;
         Bth = baseBth;
@@ -166,7 +186,8 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         skillList.Add(new Heal(this));
         MakeUnclickable();
         FadeIn();
-        outline.SetActive(false);
+        if (!BattleManager.academy.HasTrainingBrain())
+            outline.SetActive(false);
         BattleManager.Add(this);
 	}
 
@@ -179,7 +200,8 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         foreach (Skill skill in skillList)
             skill.ResetCooldown();
         MakeUnclickable();
-        outline.SetActive(false);
+        if (!BattleManager.academy.HasTrainingBrain())
+            outline.SetActive(false);
         if(!BattleManager.units.Contains(this))
             BattleManager.Add(this);
     }

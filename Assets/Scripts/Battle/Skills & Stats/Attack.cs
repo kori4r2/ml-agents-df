@@ -25,6 +25,7 @@ public class Attack : Skill {
         if (thisUnit.lastAtkHit = BattleManager.targetUnit.CheckHit(thisUnit.Atk))
             // deal damage as needed - 1 100% hit
             damage += BattleManager.targetUnit.DealDamage(thisUnit.Dmg);
-        BattleManager.BattleLog += thisUnit.name +"->"+ name +"->"+ BattleManager.targetUnit.name +" ("+ damage +")";
+        if(!BattleManager.academy.HasTrainingBrain())
+            BattleManager.BattleLog += thisUnit.name +"->"+ name +"->"+ BattleManager.targetUnit.name +" ("+ damage +")";
     }
 }

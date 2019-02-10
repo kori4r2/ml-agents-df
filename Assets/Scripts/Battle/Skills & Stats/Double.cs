@@ -25,6 +25,7 @@ public class Double : Skill {
             if (thisUnit.lastAtkHit = BattleManager.targetUnit.CheckHit(thisUnit.Atk))
                 // deal damage as needed - 1 75%% hit
                 damage += BattleManager.targetUnit.DealDamage((int)(thisUnit.Dmg * 0.75f));
-        BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
+        if (!BattleManager.academy.HasTrainingBrain())
+            BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
     }
 }

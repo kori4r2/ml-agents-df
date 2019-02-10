@@ -13,7 +13,7 @@ public static class BattleManager {
     public static int expectedNUnits = 4;
     public static int turnCounter = -1;
     public static char winningTeam;
-    private static DFAcademy academy;
+    public static DFAcademy academy;
     private static bool waiting;
     private static bool battleStarted = false;
     private static Text logObject;
@@ -45,21 +45,23 @@ public static class BattleManager {
     private static TurnQueue queue = new TurnQueue();
     
     public static void Kill(Unit unit) {
+        /*
         Debug.Log(unit.name + " was killed");
         Debug.Log("Giving rewards for death...");
         UnitAgent currentAgent = unit.GetComponent<UnitAgent>();
         // Give rewards for enemies
-        if (currentAgent.enemy1.CurHP > 0 || currentAgent.enemy1.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-            currentAgent.enemy1.GetComponent<UnitAgent>().AddReward(0.5f);
-        if (currentAgent.enemy2.CurHP > 0 || currentAgent.enemy2.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-            currentAgent.enemy2.GetComponent<UnitAgent>().AddReward(0.5f);
+        //if (currentAgent.enemy1.CurHP > 0 || currentAgent.enemy1.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
+        currentAgent.enemy1.GetComponent<UnitAgent>().AddReward(0.25f);
+        //if (currentAgent.enemy2.CurHP > 0 || currentAgent.enemy2.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
+        currentAgent.enemy2.GetComponent<UnitAgent>().AddReward(0.25f);
         // Give punishments for self and ally (if needed)
         if (currentAgent.type == UnitAgent.TYPEAGENT.Individualistic)
-            currentAgent.AddReward(-1.0f);
-        else
             currentAgent.AddReward(-0.5f);
+        else
+            currentAgent.AddReward(-0.25f);
         if (currentAgent.ally.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-            currentAgent.ally.GetComponent<UnitAgent>().AddReward(-0.5f);
+            currentAgent.ally.GetComponent<UnitAgent>().AddReward(-0.25f);
+        */
         // Removes from lists and changes interface to reflect death
         unit.FadeOut();
         unit.MakeUnclickable();
@@ -88,6 +90,17 @@ public static class BattleManager {
         }
         turnCounter = 0;
         logObject = GameObject.Find("BattleLog").GetComponentInChildren<Text>();
+        /*
+        foreach (UnitAgent agent in academy.agents) {
+            agent.AddReward(0.5f);
+        }
+        */
+        /*
+        foreach (UnitAgent agent in academy.agents) {
+            if (agent.brain.brainType == MLAgents.BrainType.Player)
+                agent.AddReward(0.5f);
+        }
+        */
         StartTurn();
     }
     public static void EndBattle(char winTeam) {
@@ -105,6 +118,7 @@ public static class BattleManager {
 
         battleStarted = false;
         if (!academy.HasTrainingBrain()) {
+            academy.CalculateRewards();
             GameObject message = GameObject.Instantiate(Resources.Load("WinMessage") as GameObject, GameObject.Find("Canvas").transform);
             message.GetComponentInChildren<Text>().text += winningTeam;
             message.GetComponent<Button>().onClick.AddListener(ButtonFunctions.EndGame);
@@ -117,7 +131,8 @@ public static class BattleManager {
         //Debug.Log("Turn started");
         waiting = false;
         currentUnit = queue.Dequeue();
-        currentUnit.outline.SetActive(true);
+        if (!academy.HasTrainingBrain())
+            currentUnit.outline.SetActive(true);
         MyDelegate continuation = currentUnit.CountdownEffects;
         continuation += ContinueTurn;
         continuation();
@@ -130,11 +145,11 @@ public static class BattleManager {
         waiting = false;
     }
     public static void Wait3Seconds() {
-       // if (!academy.HasTrainingBrain()) {
+        if (!academy.HasTrainingBrain()) {
             waiting = true;
-            currentUnit.StartCoroutine(WaitSeconds(0.5f));
-        //} else
-         //   waiting = false;
+            currentUnit.StartCoroutine(WaitSeconds(3.0f));
+        } else
+            waiting = false;
     }
     private static IEnumerator WaitingForWait() {
         while (waiting)
@@ -158,7 +173,7 @@ public static class BattleManager {
             orderedFunctions();
         } else {
             // In case of stun, put a notification on the battle log
-            if (currentUnit.statusUI.text.Contains("Stunned"))
+            if (currentUnit.statusUI.text.Contains("Stunned") && !academy.HasTrainingBrain())
                 BattleLog += currentUnit.name+"->Stunned";
             //Debug.Log(currentUnit.name + " has " + ((currentUnit.acted) ? "" : "not ") + "acted, " + currentUnit.CurHP + " HP left");
             EndTurn();
@@ -172,7 +187,8 @@ public static class BattleManager {
         */
         //Debug.Log("Turn ended");
         currentUnit.acted = false;
-        currentUnit.outline.SetActive(false);
+        if (!academy.HasTrainingBrain())
+            currentUnit.outline.SetActive(false);
         int team1Count = 0;
         int team2Count = 0;
         //Debug.Log("units count = " + units.Count);

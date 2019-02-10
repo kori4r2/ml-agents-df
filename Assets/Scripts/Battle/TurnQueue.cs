@@ -15,6 +15,9 @@ public class TurnQueue {
     private void RollInitiative() {
         queue.AddRange(backupList);
         backupList.Clear();
+        foreach (Unit unit in queue) {
+            unit.RollInitiative();
+        }
         queue.Sort();
     }
 

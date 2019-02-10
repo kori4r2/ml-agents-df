@@ -11,7 +11,9 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
     public BEHAVIOUR logic;
     public float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, float reward, bool done, List<float> memory) {
         float[] decision = new float[1] { -1 }; // The decision variable has to be float[], but the value will be an integer
-        if(logic == BEHAVIOUR.AutoAttack) {
+        // Define standard action to avoid invalid return value
+        decision[0] = (vectorObs[(int)OBSERVATION.Enemy1HP] > 0.0f) ? (int)DECISION.AttackEnemy1 : (int)DECISION.AttackEnemy2;
+        if (logic == BEHAVIOUR.AutoAttack) {
             if (vectorObs[(int)OBSERVATION.Enemy1HP] > 0.0f && vectorObs[(int)OBSERVATION.Enemy2HP] > 0.0f)
                 decision[0] = (Random.Range(0, 2) == 0) ? (int)DECISION.AttackEnemy1 : (int)DECISION.AttackEnemy2;
             else

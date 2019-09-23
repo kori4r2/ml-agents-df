@@ -22,6 +22,7 @@ ExportedObj/
 *.booproj
 *.svd
 .vs/*
+.vscode/*
 
 
 # Unity3D generated meta files
@@ -35,3 +36,9 @@ sysinfo.txt
 Dockerfile
 unity-volume/*
 ml-agents/*
+
+#Training files
+models/*
+summaries/*
+train*.yaml
+*UnitySDK.log

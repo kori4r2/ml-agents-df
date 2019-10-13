@@ -55,78 +55,87 @@ public enum OBSERVATION {
 
 
 public class UnitAgent : Agent {
+    public BattleManager battleManager;
     public enum TYPEAGENT {
         Individualistic,
         Cooperative
     };
     public TYPEAGENT type;
-    public Unit self = null, ally = null, enemy1 = null, enemy2 = null;
-    private bool hasStarted;
+    public bool IsFullHealth{
+        get{
+            return self.CurHP == self.MaxHP;
+        }
+    }
+    [SerializeField] private Unit self;
+    [SerializeField] private Unit ally;
+    [SerializeField] private Unit enemy1;
+    [SerializeField] private Unit enemy2;
+    [SerializeField] private DecisionLog decisionLog = null;
     
 	// Use this for initialization
-	void Start () {
-        self = gameObject.GetComponent<Unit>();
-        GameObject[] units = GameObject.FindGameObjectsWithTag("Player");
-        for (int i = 0; i < units.Length; i++) {
-            Unit aux = units[i].GetComponent<Unit>();
-            if (aux.team.Equals(self.team)) {
-                if(!aux.name.Equals(self.name))
-                    ally = aux;
-            }else {
-                if (enemy1 == null)
-                    enemy1 = aux;
-                else
-                    enemy2 = aux;
-            }
-        }
-        hasStarted = false;
+	void Awake () {
         Debug.Log(self.name + " has " + ally.name + " as ally, " + enemy1.name + " as enemy1 and " + enemy2.name + " as enemy2");
 	}
 
+    void Start(){
+        if(decisionLog){
+            decisionLog.myAgents += (type.ToString() + "agent with " + brain.name + " brain\n");
+            decisionLog.agentsCount++;
+        }
+    }
+
     public override void CollectObservations() {
-        //Debug.Log(self.name + " observing");
         // Get number of current turn (allows the brain to notice when they have been stunned)
-        AddVectorObs((BattleManager.turnCounter - 0.0f)/(200.0f));
+        AddVectorObs((battleManager.turnCounter - 0.0f)/(200.0f));
         // Adds if the last attack hit
         AddVectorObs((self.lastAtkHit)? 1.0f: 0.0f);
         // Get cooldown of all skills
         Skill skill = self.skillList.Find(skll => skll.name == "Double");
         if (!skill.Available) {
+            Debug.Log("Double is on cooldown");
             SetActionMask((int)DECISION.DoubleEnemy1);
             SetActionMask((int)DECISION.DoubleEnemy2);
         }
         AddVectorObs((skill.CurCD - 0.0f)/(skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Poison");
         if (!skill.Available) {
+            Debug.Log("Poison is on cooldown");
             SetActionMask((int)DECISION.PoisonEnemy1);
             SetActionMask((int)DECISION.PoisonEnemy2);
         }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Stun");
         if (!skill.Available) {
+            Debug.Log("Stun is on cooldown");
             SetActionMask((int)DECISION.StunEnemy1);
             SetActionMask((int)DECISION.StunEnemy2);
         }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Blind");
         if (!skill.Available) {
+            Debug.Log("Blind is on cooldown");
             SetActionMask((int)DECISION.BlindEnemy1);
             SetActionMask((int)DECISION.BlindEnemy2);
         }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Block");
-        if (!skill.Available)
+        if (!skill.Available){
+            Debug.Log("Block is on cooldown");
             SetActionMask((int)DECISION.BlockSelf);
+        }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Heal");
         if (!skill.Available) {
+            Debug.Log("Heal is on cooldown");
             SetActionMask((int)DECISION.HealAlly);
             SetActionMask((int)DECISION.HealSelf);
         }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
+
         // Get HP of enemy 1
         AddVectorObs((enemy1.CurHP - 0.0f)/(enemy1.MaxHP - 0.0f));
         if(enemy1.CurHP <= 0) {
+            Debug.Log("enemy1(" + enemy1.name + ") is dead");
             SetActionMask((int)DECISION.AttackEnemy1);
             SetActionMask((int)DECISION.DoubleEnemy1);
             SetActionMask((int)DECISION.PoisonEnemy1);
@@ -134,17 +143,19 @@ public class UnitAgent : Agent {
             SetActionMask((int)DECISION.BlindEnemy1);
         }
         // Get how many turns are left on status effects afflicting enemy 1
-        StatusEffect status = enemy1.effects.Find(effect => effect.text == "Poisoned");
+        StatusEffect status = enemy1.effects.FindLast(effect => effect.text == "Poisoned");
         AddVectorObs((status==null? 0.0f: (status.TurnsLeft - 0.0f)) / (status==null? 1.0f: (status.duration - 0.0f)));
-        status = enemy1.effects.Find(effect => effect.text == "Stunned");
+        status = enemy1.effects.FindLast(effect => effect.text == "Stunned");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-        status = enemy1.effects.Find(effect => effect.text == "Blinded");
+        status = enemy1.effects.FindLast(effect => effect.text == "Blinded");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-        status = enemy1.effects.Find(effect => effect.text == "DefUp");
+        status = enemy1.effects.FindLast(effect => effect.text == "DefUp");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
+
         // Get HP of enemy 2
         AddVectorObs((enemy2.CurHP - 0.0f) / (enemy2.MaxHP - 0.0f));
         if (enemy2.CurHP <= 0) {
+            Debug.Log("enemy2(" + enemy2.name + ") is dead");
             SetActionMask((int)DECISION.AttackEnemy2);
             SetActionMask((int)DECISION.DoubleEnemy2);
             SetActionMask((int)DECISION.PoisonEnemy2);
@@ -152,40 +163,48 @@ public class UnitAgent : Agent {
             SetActionMask((int)DECISION.BlindEnemy2);
         }
         // Get how many turns are left on status effects afflicting enemy 2
-        status = enemy2.effects.Find(effect => effect.text == "Poisoned");
+        status = enemy2.effects.FindLast(effect => effect.text == "Poisoned");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-        status = enemy2.effects.Find(effect => effect.text == "Stunned");
+        status = enemy2.effects.FindLast(effect => effect.text == "Stunned");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-        status = enemy2.effects.Find(effect => effect.text == "Blinded");
+        status = enemy2.effects.FindLast(effect => effect.text == "Blinded");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-        status = enemy2.effects.Find(effect => effect.text == "DefUp");
+        status = enemy2.effects.FindLast(effect => effect.text == "DefUp");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
+
         // Get HP of self
         AddVectorObs((self.CurHP - 0.0f) / (self.MaxHP - 0.0f));
         // Get how many turns are left on status effects afflicting self
-        status = self.effects.Find(effect => effect.text == "Poisoned");
+        status = self.effects.FindLast(effect => effect.text == "Poisoned");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-        status = self.effects.Find(effect => effect.text == "Stunned");
+        status = self.effects.FindLast(effect => effect.text == "Stunned");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-        status = self.effects.Find(effect => effect.text == "Blinded");
+        status = self.effects.FindLast(effect => effect.text == "Blinded");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-        status = self.effects.Find(effect => effect.text == "DefUp");
+        status = self.effects.FindLast(effect => effect.text == "DefUp");
         AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
+
         if (type == TYPEAGENT.Cooperative) {
             // Get HP of ally
             AddVectorObs((ally.CurHP - 0.0f) / (ally.MaxHP - 0.0f));
-            if (ally.CurHP <= 0)
+            if (ally.CurHP <= 0){
+                Debug.Log("ally(" + ally.name + ") is dead");
                 SetActionMask((int)DECISION.HealAlly);
+            }
             // Get how many turns are left on status effects afflicting ally
-            status = ally.effects.Find(effect => effect.text == "Poisoned");
+            status = ally.effects.FindLast(effect => effect.text == "Poisoned");
             AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-            status = ally.effects.Find(effect => effect.text == "Stunned");
+            status = ally.effects.FindLast(effect => effect.text == "Stunned");
             AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-            status = ally.effects.Find(effect => effect.text == "Blinded");
+            status = ally.effects.FindLast(effect => effect.text == "Blinded");
             AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
-            status = ally.effects.Find(effect => effect.text == "DefUp");
+            status = ally.effects.FindLast(effect => effect.text == "DefUp");
             AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
         } else {
+            if (ally.CurHP <= 0){
+                Debug.Log("ally(" + ally.name + ") is dead");
+                SetActionMask((int)DECISION.HealAlly);
+            }
             AddVectorObs(0.0f);
             AddVectorObs(0.0f);
             AddVectorObs(0.0f);
@@ -196,84 +215,97 @@ public class UnitAgent : Agent {
     }
 
     public override void AgentAction(float[] vectorAction, string textAction) {
-        //Debug.Log(self.name + " acting");
-        // Set initial reward
-        /*
-        if (!hasStarted) {
-            hasStarted = true;
-            SetReward(0.5f);
-        }
-        */
         DECISION decision = (DECISION)vectorAction[0];
         switch (decision) {
             case DECISION.AttackEnemy1:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Attack");
-                BattleManager.targetUnit = enemy1;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Attack");
+                battleManager.targetUnit = enemy1;
                 break;
             case DECISION.AttackEnemy2:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Attack");
-                BattleManager.targetUnit = enemy2;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Attack");
+                battleManager.targetUnit = enemy2;
                 break;
             case DECISION.DoubleEnemy1:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Double");
-                BattleManager.targetUnit = enemy1;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Double");
+                battleManager.targetUnit = enemy1;
                 break;
             case DECISION.DoubleEnemy2:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Double");
-                BattleManager.targetUnit = enemy2;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Double");
+                battleManager.targetUnit = enemy2;
                 break;
             case DECISION.PoisonEnemy1:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Poison");
-                BattleManager.targetUnit = enemy1;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Poison");
+                battleManager.targetUnit = enemy1;
                 break;
             case DECISION.PoisonEnemy2:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Poison");
-                BattleManager.targetUnit = enemy2;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Poison");
+                battleManager.targetUnit = enemy2;
                 break;
             case DECISION.StunEnemy1:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Stun");
-                BattleManager.targetUnit = enemy1;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Stun");
+                battleManager.targetUnit = enemy1;
+                if(decisionLog){
+                    StatusEffect stunEffect = enemy1.effects.FindLast(effect => effect.text == "Stunned");
+                    if(stunEffect != null && stunEffect.TurnsLeft == 1)
+                        decisionLog.coordinatedStuns++;
+                }
                 break;
             case DECISION.StunEnemy2:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Stun");
-                BattleManager.targetUnit = enemy2;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Stun");
+                battleManager.targetUnit = enemy2;
+                if(decisionLog){
+                    StatusEffect stunEffect = enemy2.effects.FindLast(effect => effect.text == "Stunned");
+                    if(stunEffect != null && stunEffect.TurnsLeft == 1)
+                        decisionLog.coordinatedStuns++;
+                }
                 break;
             case DECISION.BlindEnemy1:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Blind");
-                BattleManager.targetUnit = enemy1;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Blind");
+                battleManager.targetUnit = enemy1;
+                if(decisionLog){
+                    StatusEffect blindEffect = enemy1.effects.FindLast(effect => effect.text == "Blinded");
+                    if(blindEffect != null && blindEffect.TurnsLeft == 1)
+                        decisionLog.coordinatedBlinds++;
+                }
                 break;
             case DECISION.BlindEnemy2:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Blind");
-                BattleManager.targetUnit = enemy2;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Blind");
+                battleManager.targetUnit = enemy2;
+                if(decisionLog){
+                    StatusEffect blindEffect = enemy2.effects.FindLast(effect => effect.text == "Blinded");
+                    if(blindEffect != null && blindEffect.TurnsLeft == 1)
+                        decisionLog.coordinatedBlinds++;
+                }
                 break;
             case DECISION.BlockSelf:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Block");
-                BattleManager.targetUnit = self;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Block");
+                battleManager.targetUnit = self;
                 break;
             case DECISION.HealSelf:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Heal");
-                BattleManager.targetUnit = self;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Heal");
+                battleManager.targetUnit = self;
                 break;
             case DECISION.HealAlly:
-                BattleManager.selectedAction = self.skillList.Find(skill => skill.name == "Heal");
-                BattleManager.targetUnit = ally;
+                battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Heal");
+                battleManager.targetUnit = ally;
+                if(decisionLog)
+                    decisionLog.healedAlly++;
                 break;
         }
-        /*
-        // Recalculate reward (Might be unnecessary if rewards are cumulative)
-        SetReward(0.0f);
-        if (enemy1.CurHP <= 0 || enemy2.CurHP <= 0)
-            AddReward(0.5f);
-        if (type == TYPEAGENT.Cooperative && ally.CurHP <= 0)
-            AddReward(-0.5f);
-        */
+        
         Debug.Log("Calculated reward at action = " + GetCumulativeReward());
-        BattleManager.TargetSelected();
+        battleManager.TargetSelected();
+    }
+
+    public new void AddReward(float value){
+        base.AddReward(value);
+        if(decisionLog){
+            decisionLog.newRewards += value;
+        }
     }
 
     public override void AgentReset() {
-        //Debug.Log("agent was reset");
-        self.Reset();
-        hasStarted = false;
+        // self.ResetStats();
+        Debug.Log("agent was reset");
     }
 }

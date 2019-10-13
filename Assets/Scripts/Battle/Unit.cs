@@ -5,30 +5,19 @@ using UnityEngine.UI;
 
 public class Unit : MonoBehaviour , System.IComparable<Unit> {
     // Fixed stats
-    [SerializeField]
-    private int maxHP;
-    [SerializeField]
-    private int maxMP;
-    [SerializeField]
-    private int baseDef;
-    [SerializeField]
-    private int baseBth;
-    [SerializeField]
-    private int baseInitiative;
+    [SerializeField] private int maxHP;
+    [SerializeField] private int maxMP;
+    [SerializeField] private int baseDef;
+    [SerializeField] private int baseBth;
+    [SerializeField] private int baseInitiative;
     // Changeable stats
-    [SerializeField]
-    private int curHP;
+    [SerializeField] private int curHP;
     private int curMP;
-    [SerializeField]
-    private int baseAtk;
-    [SerializeField]
-    private int maxAtk;
-    [SerializeField]
-    private int def;
-    [SerializeField]
-    private int bth;
-    [SerializeField]
-    private int initiative;
+    [SerializeField] private int baseAtk;
+    [SerializeField] private int maxAtk;
+    [SerializeField] private int def;
+    [SerializeField] private int bth;
+    [SerializeField] private int initiative;
     private int lastInitRoll;
     public char team;
     public bool acted;
@@ -47,11 +36,12 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         get { return curHP; }
         private set {
             if (curHP > 0) {
-                curHP = (value <= 0) ? 0 : (value > MaxHP)? MaxHP : value;
-                if (!BattleManager.academy.HasTrainingBrain())
+                curHP = Mathf.Clamp(value, 0, MaxHP);
+                if (!battleManager.academy.HasTrainingBrain())
                     hpUI.text = "HP =             " + curHP.ToString().PadLeft((int)System.Math.Floor(System.Math.Log10(MaxHP)+1)) + " /"+MaxHP;
                 if (curHP <= 0) {
-                    BattleManager.Kill(this);
+                    battleManager.Kill(this);
+                    Purge();
                 }
             }
         }
@@ -70,6 +60,7 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
     // Aux variables
     public List<StatusEffect> effects;
     public List<Skill> skillList;
+    public BattleManager battleManager;
     // Aux functions
     public int RollInitiative() {
         lastInitRoll = Random.Range(1, 100) + Initiative;
@@ -91,6 +82,7 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
     // Battle related functions
     public void AddEffect(StatusEffect effect) {
         effects.Add(effect);
+        effects.Sort();
         UpdateStatusUI();
     }
     public bool CheckHit(int bonus) {
@@ -105,21 +97,19 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
     public void Purge() {
         foreach (StatusEffect status in effects)
             status.Remove();
+        effects.Clear();
     }
     public void CountdownEffects() {
-        List<StatusEffect> remotionList = new List<StatusEffect>();
-        foreach (StatusEffect status in effects)
-            if (CurHP > 0)
-                if (!status.Countdown())
-                    remotionList.Add(status);
-        foreach (StatusEffect status in remotionList)
-            effects.Remove(status);
-        remotionList.Clear();
+        foreach (StatusEffect status in effects.ToArray()){
+            if (CurHP > 0 && !status.Countdown())
+                effects.Remove(status);
+        }
+        effects.Sort();
         UpdateStatusUI();
     }
     // UI related functions
     public void UpdateStatusUI() {
-        if (BattleManager.academy.HasTrainingBrain())
+        if (battleManager.academy.HasTrainingBrain())
             return;
         string newStatusUI = "";
         foreach (StatusEffect status in effects) {
@@ -128,43 +118,41 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         statusUI.text = newStatusUI;
     }
     public void SetupTurn() {
-        Debug.Log("Setting up skills");
         // Update all skill buttons
         for (int i = 0; i < skillList.Count; i++) {
             skillList[i].CurCD--;
-            if (!BattleManager.academy.HasTrainingBrain()) {
+            if (!battleManager.academy.HasTrainingBrain()) {
                 skillButtons[i].gameObject.GetComponentInChildren<Text>().text =
                 (skillList[i].CurCD <= 0) ? skillList[i].name : skillList[i].CurCD.ToString();
                 skillButtons[i].interactable = skillList[i].Available;
             }
         }
+        Debug.Log("Setting up skills");
     }
     public void MakeClickable() {
-        if (BattleManager.academy.HasTrainingBrain())
+        if (battleManager.academy.HasTrainingBrain())
             return;
         selectButton.gameObject.GetComponent<Image>().raycastTarget = true;
     }
     public void MakeUnclickable() {
-        if (BattleManager.academy.HasTrainingBrain())
+        if (battleManager.academy.HasTrainingBrain())
             return;
         selectButton.gameObject.GetComponent<Image>().raycastTarget = false;
     }
     public void FadeOut() {
-        if (BattleManager.academy.HasTrainingBrain())
+        if (battleManager.academy.HasTrainingBrain())
             return;
         selectButton.interactable = false;
     }
     public void FadeIn() {
-        if (BattleManager.academy.HasTrainingBrain())
+        if (battleManager.academy.HasTrainingBrain())
             return;
         selectButton.interactable = true;
     }
 
     // Use this for initialization
-    void Start () {
-        if(BattleManager.academy == null)
-            BattleManager.academy = GameObject.Find("Academy").GetComponent<DFAcademy>();
-        if (!BattleManager.academy.HasTrainingBrain())
+    void Awake () {
+        if (!battleManager.academy.HasTrainingBrain())
             nameUI.text = name;
         CurHP = maxHP;
         CurMP = maxMP;
@@ -186,23 +174,27 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         skillList.Add(new Heal(this));
         MakeUnclickable();
         FadeIn();
-        if (!BattleManager.academy.HasTrainingBrain())
+        if (!battleManager.academy.HasTrainingBrain())
             outline.SetActive(false);
-        BattleManager.Add(this);
 	}
 
-    public void Reset() {
+    public void ResetStats() {
         FadeIn();
         Purge();
-        curHP = MaxHP;
-        CurHP = curHP;
-        CurMP = MaxMP;
         foreach (Skill skill in skillList)
             skill.ResetCooldown();
+        curHP = 1;
+        CurHP = MaxHP;
+        curMP = 1;
+        CurMP = MaxMP;
+        Bth = baseBth;
+        Def = baseDef;
+        Initiative = baseInitiative;
+        acted = false;
+        lastAtkHit = false;
         MakeUnclickable();
-        if (!BattleManager.academy.HasTrainingBrain())
+        if (!battleManager.academy.HasTrainingBrain())
             outline.SetActive(false);
-        if(!BattleManager.units.Contains(this))
-            BattleManager.Add(this);
+        Debug.Log("Resetting " + name + ", CurHP = " + CurHP);
     }
 }

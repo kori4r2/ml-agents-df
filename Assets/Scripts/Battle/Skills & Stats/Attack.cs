@@ -22,10 +22,10 @@ public class Attack : Skill {
         damage = 0;
         base.Use();
         // check hit on target
-        if (thisUnit.lastAtkHit = BattleManager.targetUnit.CheckHit(thisUnit.Atk))
+        if (thisUnit.lastAtkHit = thisUnit.battleManager.targetUnit.CheckHit(thisUnit.Atk)){
             // deal damage as needed - 1 100% hit
-            damage += BattleManager.targetUnit.DealDamage(thisUnit.Dmg);
-        if(!BattleManager.academy.HasTrainingBrain())
-            BattleManager.BattleLog += thisUnit.name +"->"+ name +"->"+ BattleManager.targetUnit.name +" ("+ damage +")";
+            damage += thisUnit.battleManager.targetUnit.DealDamage(thisUnit.Dmg);
+        }
+        thisUnit.battleManager.BattleLog += thisUnit.name +"->"+ name +"->"+ thisUnit.battleManager.targetUnit.name +" ("+ damage +")";
     }
 }

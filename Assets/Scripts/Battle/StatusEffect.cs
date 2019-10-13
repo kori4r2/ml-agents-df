@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class StatusEffect {
+public abstract class StatusEffect : System.IComparable<StatusEffect> {
     protected Unit source;
     protected Unit target;
     private int turnsLeft;
@@ -30,4 +30,11 @@ public abstract class StatusEffect {
     }
     public abstract bool Countdown();
     public abstract void Remove();
+    public int CompareTo(StatusEffect effect) {
+        int nameComparison = text.CompareTo(effect.text);
+        if(nameComparison == 0){
+            return turnsLeft.CompareTo(effect.TurnsLeft);
+        }
+        return nameComparison;
+    }
 }

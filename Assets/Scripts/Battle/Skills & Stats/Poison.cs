@@ -13,13 +13,12 @@ public class Poison : Skill {
     public override void Use() {
         base.Use();
         // check hit on target
-        if (thisUnit.lastAtkHit = BattleManager.targetUnit.CheckHit(thisUnit.Atk)) {
+        if (thisUnit.lastAtkHit = thisUnit.battleManager.targetUnit.CheckHit(thisUnit.Atk)) {
             // deal damage as needed - 1 30% hit
-            damage += BattleManager.targetUnit.DealDamage((int)(thisUnit.Dmg * 0.3f));
+            damage += thisUnit.battleManager.targetUnit.DealDamage((int)(thisUnit.Dmg * 0.3f));
             // apply the Poisoned status effect
-            BattleManager.targetUnit.AddEffect(new Poisoned(thisUnit, BattleManager.targetUnit));
+            thisUnit.battleManager.targetUnit.AddEffect(new Poisoned(thisUnit, thisUnit.battleManager.targetUnit));
         }
-        if (!BattleManager.academy.HasTrainingBrain())
-            BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
+        thisUnit.battleManager.BattleLog += thisUnit.name + "->" + name + "->" + thisUnit.battleManager.targetUnit.name + " (" + damage + ")";
     }
 }

@@ -20,7 +20,7 @@ public abstract class Skill {
     public int CurCD {
         get { return curCD; }
         set {
-            curCD = (value <= 0)? 0 : value;
+            curCD = Mathf.Max(value, 0);
             Available = (curCD <= 0);
         }
     }

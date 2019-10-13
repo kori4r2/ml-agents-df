@@ -10,8 +10,7 @@ public class Poisoned : StatusEffect {
 
     public override bool Countdown() {
         int damage = target.DealDamage((int)(source.Dmg * dotMultiplier), "Poison");
-        if (!BattleManager.academy.HasTrainingBrain())
-            BattleManager.BattleLog += target.name + "->" + text +" ("+ damage +")";
+        source.battleManager.BattleLog += target.name + "->" + text +" ("+ damage +")";
         TurnsLeft--;
         return (TurnsLeft > 0);
     }

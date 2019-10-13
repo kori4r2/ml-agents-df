@@ -20,12 +20,13 @@ public class Double : Skill {
         damage = 0;
         base.Use();
         // two hits
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 2; i++){
             // check hit on target
-            if (thisUnit.lastAtkHit = BattleManager.targetUnit.CheckHit(thisUnit.Atk))
+            if (thisUnit.lastAtkHit = thisUnit.battleManager.targetUnit.CheckHit(thisUnit.Atk)){
                 // deal damage as needed - 1 75%% hit
-                damage += BattleManager.targetUnit.DealDamage((int)(thisUnit.Dmg * 0.75f));
-        if (!BattleManager.academy.HasTrainingBrain())
-            BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
+                damage += thisUnit.battleManager.targetUnit.DealDamage((int)(thisUnit.Dmg * 0.75f));
+            }
+        }
+        thisUnit.battleManager.BattleLog += thisUnit.name + "->" + name + "->" + thisUnit.battleManager.targetUnit.name + " (" + damage + ")";
     }
 }

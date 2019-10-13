@@ -14,8 +14,7 @@ public class Heal : Skill {
         base.Use();
         // auto hit
         // deal negative damage as needed equivalent to 20% maxhp
-        damage += BattleManager.targetUnit.DealDamage((int)(BattleManager.targetUnit.MaxHP * -0.2f), "Heal");
-        if (!BattleManager.academy.HasTrainingBrain())
-            BattleManager.BattleLog += thisUnit.name + "->" + name + "->" + BattleManager.targetUnit.name + " (" + damage + ")";
+        damage += thisUnit.battleManager.targetUnit.DealDamage((int)(thisUnit.battleManager.targetUnit.MaxHP * -0.2f), "Heal");
+        thisUnit.battleManager.BattleLog += thisUnit.name + "->" + name + "->" + thisUnit.battleManager.targetUnit.name + " (" + damage + ")";
     }
 }

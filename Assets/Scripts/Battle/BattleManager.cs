@@ -5,129 +5,111 @@ using UnityEngine.UI;
 
 public delegate void MyDelegate();
 
-public static class BattleManager {
-    public static List<Unit> units = new List<Unit>();
-    public static Unit currentUnit;
-    public static Unit targetUnit;
-    public static Skill selectedAction;
-    public static int expectedNUnits = 4;
-    public static int turnCounter = -1;
-    public static char winningTeam;
-    public static DFAcademy academy;
-    private static bool waiting;
-    private static bool battleStarted = false;
-    private static Text logObject;
-    public static string BattleLog {
+public class BattleManager : MonoBehaviour {
+    public List<Unit> units = new List<Unit>();
+    public Unit currentUnit;
+    public Unit targetUnit;
+    public Skill selectedAction;
+    public int expectedNUnits = 4;
+    public int turnCounter = -1;
+    public char winningTeam;
+    public DFAcademy academy;
+    public bool rematchOverride = false;
+    private bool waiting;
+    private bool battleStarted = false;
+    public List<DecisionLog> decisionLogs;
+    private Text logObject;
+    private string logString;
+    public string BattleLog {
         get { return logObject.text; }
         set {
             string[] split = value.Split(new char[]{'\n'}, System.StringSplitOptions.RemoveEmptyEntries);
-            if (split.Length <= 0)
-                logObject.text = "";
+            if (split.Length <= 0){
+                if(!academy.HasTrainingBrain())
+                    logObject.text = "";
+                logString = "";
+            }
             else {
-                logObject.text = turnCounter +": "+ split[split.Length-1]+"\n";
+                if(!academy.HasTrainingBrain())
+                    logObject.text = turnCounter +": "+ split[split.Length-1]+"\n";
+                logString = turnCounter +": "+ split[split.Length-1]+"\n";
                 for (int i = 0; i < split.Length - 1; i++) {
-                    logObject.text += split[i] + "\n";
+                    if(!academy.HasTrainingBrain())
+                        logObject.text += split[i] + "\n";
+                    logString += split[i] + "\n";
                 }
             }
         }
     }
-    private static int nUnits;
-    public static int NUnits {
-        get {
-            return nUnits;
-        }
-        set {
-            nUnits = value;
-            if (NUnits == expectedNUnits && !battleStarted)
-                StartBattle();
-        }
+    private TurnQueue queue;
+
+    public void Start(){
+        queue = new TurnQueue(this);
+        StartBattle();
     }
-    private static TurnQueue queue = new TurnQueue();
     
-    public static void Kill(Unit unit) {
-        /*
-        Debug.Log(unit.name + " was killed");
-        Debug.Log("Giving rewards for death...");
-        UnitAgent currentAgent = unit.GetComponent<UnitAgent>();
-        // Give rewards for enemies
-        //if (currentAgent.enemy1.CurHP > 0 || currentAgent.enemy1.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-        currentAgent.enemy1.GetComponent<UnitAgent>().AddReward(0.25f);
-        //if (currentAgent.enemy2.CurHP > 0 || currentAgent.enemy2.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-        currentAgent.enemy2.GetComponent<UnitAgent>().AddReward(0.25f);
-        // Give punishments for self and ally (if needed)
-        if (currentAgent.type == UnitAgent.TYPEAGENT.Individualistic)
-            currentAgent.AddReward(-0.5f);
-        else
-            currentAgent.AddReward(-0.25f);
-        if (currentAgent.ally.GetComponent<UnitAgent>().type == UnitAgent.TYPEAGENT.Cooperative)
-            currentAgent.ally.GetComponent<UnitAgent>().AddReward(-0.25f);
-        */
+    public void Kill(Unit unit) {
         // Removes from lists and changes interface to reflect death
         unit.FadeOut();
         unit.MakeUnclickable();
-        units.Remove(unit);
+        //units.Remove(unit);
         queue.Remove(unit);
-        NUnits--;
+        //NUnits--;
     }
-    public static void Add(Unit unit) {
+    public void Add(Unit unit) {
         Debug.Log("Added unit: " + unit.name);
-        units.Add(unit);
+        //units.Add(unit);
         queue.Enqueue(unit);
-        NUnits++;
+        //NUnits++;
     }
-    public static void StartBattle() {
+    public void StartBattle() {
+        foreach(Unit unit in units){
+            unit.ResetStats();
+            queue.Enqueue(unit);
+        }
+        
         battleStarted = true;
         academy = GameObject.Find("Academy").GetComponent<DFAcademy>();
 
         Debug.Log("Battle started");
-        Unit unit = units[0];
-        // make sure skill buttons are clickable
-        foreach (Button button in unit.skillButtons) {
-            button.interactable = true;
+        if(!academy.HasTrainingBrain()){
+            Unit unit = units[0];
+            // make sure skill buttons are clickable
+            foreach (Button button in unit.skillButtons) {
+                button.interactable = true;
+            }
         }
-        foreach (Unit u in units) {
-            queue.Dequeue();
-        }
+        queue.FirstTurn();
         turnCounter = 0;
         logObject = GameObject.Find("BattleLog").GetComponentInChildren<Text>();
-        /*
-        foreach (UnitAgent agent in academy.agents) {
-            agent.AddReward(0.5f);
-        }
-        */
-        /*
-        foreach (UnitAgent agent in academy.agents) {
-            if (agent.brain.brainType == MLAgents.BrainType.Player)
-                agent.AddReward(0.5f);
-        }
-        */
         StartTurn();
     }
-    public static void EndBattle(char winTeam) {
+    public void EndBattle(char winTeam) {
         Debug.Log("Battle ended");
         winningTeam = winTeam;
-        Unit survivor = units[0];
-        foreach(Button button in survivor.skillButtons) {
-            button.interactable = false;
+        if(!academy.HasTrainingBrain()){
+            Unit survivor = queue.Dequeue();
+            foreach(Button button in survivor.skillButtons) {
+                button.interactable = false;
+            }
         }
-        foreach (Unit u in units) {
-            queue.Remove(u);
-            NUnits--;
-        }
-        units.Clear();
+        queue.Clear();
 
         battleStarted = false;
-        if (!academy.HasTrainingBrain()) {
+        if (!academy.HasTrainingBrain() && !rematchOverride) {
             academy.CalculateRewards();
+            foreach(DecisionLog log in decisionLogs){
+                log.RecalculateStatistics();
+            }
             GameObject message = GameObject.Instantiate(Resources.Load("WinMessage") as GameObject, GameObject.Find("Canvas").transform);
             message.GetComponentInChildren<Text>().text += winningTeam;
             message.GetComponent<Button>().onClick.AddListener(ButtonFunctions.EndGame);
         } else {
             academy.AcademyReset();
         }
-        
+
     }
-    public static void StartTurn() {
+    public void StartTurn() {
         //Debug.Log("Turn started");
         waiting = false;
         currentUnit = queue.Dequeue();
@@ -137,30 +119,30 @@ public static class BattleManager {
         continuation += ContinueTurn;
         continuation();
     }
-    private static IEnumerator WaitSeconds(float dur) {
+    private IEnumerator WaitSeconds(float dur) {
         //Debug.Log("waiting started");
         waiting = true;
         yield return new WaitForSeconds(dur);
         //Debug.Log("waiting ended");
         waiting = false;
     }
-    public static void Wait3Seconds() {
+    public void Wait3Seconds() {
         if (!academy.HasTrainingBrain()) {
             waiting = true;
             currentUnit.StartCoroutine(WaitSeconds(3.0f));
         } else
             waiting = false;
     }
-    private static IEnumerator WaitingForWait() {
+    private IEnumerator WaitingForWait() {
         while (waiting)
             yield return new WaitForSeconds(0.1f);
         //Debug.Log("requesting decision from " + currentUnit.name);
         currentUnit.GetComponent<UnitAgent>().RequestDecision();
     }
-    private static void WaitToGetAction() {
+    private void WaitToGetAction() {
         currentUnit.StartCoroutine(WaitingForWait());
     }
-    public static void ContinueTurn() {
+    public void ContinueTurn() {
         //Debug.Log("continuing turn");
         if (currentUnit.CurHP > 0 && !currentUnit.acted) {
             // Update all skill buttons, and skill cooldowns
@@ -173,13 +155,13 @@ public static class BattleManager {
             orderedFunctions();
         } else {
             // In case of stun, put a notification on the battle log
-            if (currentUnit.statusUI.text.Contains("Stunned") && !academy.HasTrainingBrain())
+            if (currentUnit.statusUI.text.Contains("Stunned"))
                 BattleLog += currentUnit.name+"->Stunned";
             //Debug.Log(currentUnit.name + " has " + ((currentUnit.acted) ? "" : "not ") + "acted, " + currentUnit.CurHP + " HP left");
             EndTurn();
         }
     }
-    public static void EndTurn() {
+    public void EndTurn() {
         /*
         foreach(UnitAgent agent in academy.agents) {
             Debug.Log("agent " + agent.name + " has reward of " + agent.GetReward());
@@ -193,9 +175,9 @@ public static class BattleManager {
         int team2Count = 0;
         //Debug.Log("units count = " + units.Count);
         foreach (Unit unit in units) {
-            if (unit.team == '1')
+            if (unit.CurHP > 0 && unit.team == '1')
                 team1Count++;
-            else
+            else if(unit.CurHP > 0)
                 team2Count++;
             unit.MakeUnclickable();
             unit.FadeIn();
@@ -206,7 +188,7 @@ public static class BattleManager {
         else
             StartTurn();
     }
-    public static void SkillSelected() {
+    public void SkillSelected() {
         //Debug.Log("Skill selected");
         foreach(Unit unit in units) {
             switch (selectedAction.skillType) {
@@ -244,7 +226,7 @@ public static class BattleManager {
             }
         }
     }
-    public static void TargetSelected() {
+    public void TargetSelected() {
         Debug.Log("Target selected, "+currentUnit.name+" used "+selectedAction.name+" on "+targetUnit.name);
         MyDelegate aux = selectedAction.Use;
         // Give rewards for enemies killed and negative rewards for deaths

@@ -9,14 +9,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eb2434922668749e482cccb756b36dd2, type: 3}
-  m_Name: 
+  m_Name: Testing
   m_EditorClassIdentifier: 
-  myAgents: 
-  agentsCount: 0
-  nBattles: 0
-  healedAlly: 0
+  myAgents: 'Individualisticagent with TrainedBrain brain
+
+    Individualisticagent with TrainedBrain brain
+
+'
+  agentsCount: 2
+  nBattles: 17
+  healedAlly: 1
   coordinatedStuns: 0
-  coordinatedBlinds: 0
-  rewardsMean: 0
+  coordinatedBlinds: 2
+  rewardsMean: 9.860294
   rewardsStdDeviation: 0
   newRewards: 0

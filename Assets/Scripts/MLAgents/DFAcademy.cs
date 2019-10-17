@@ -6,6 +6,10 @@ using UnityEngine;
 public class DFAcademy : Academy {
     public List<UnitAgent> agents;
     public BattleManager battleManager;
+	[SerializeField] private Brain trainingBrain;
+	[SerializeField] private Brain playerBrain;
+	[SerializeField] private Brain trainedBrain;
+	[SerializeField] private Brain heuristicBrain;
     private bool changedLogic;
     private const float maxRewardValue = 50.0f;
     private int debug = 0;
@@ -80,42 +84,21 @@ public class DFAcademy : Academy {
         battleManager.BattleLog = "";
         // During curriculum training, changes the heuristic brain's logic if necessary
         if ((!changedLogic && resetParameters["logic"] == 1.0f) || debug >= 5) {
-            gameObject.GetComponentInChildren<SimpleHeuristic>().logic = BEHAVIOUR.SimpleLogic;
+			heuristicBrain.GetComponent<SimpleHeuristic>().logic = BEHAVIOUR.SimpleLogic;
             changedLogic = true;
-        } else{
-            resetParameters["logic"] = 0.0f;
-        }
+        } else if((changedLogic && resetParameters["logic"] == 2.0f) || debug >= 10){
+			foreach(UnitAgent agent in agents){
+				if(agent.brain.brainType != BrainType.Internal){
+					agent.GiveBrain(trainingBrain);
+				}
+			}
+            heuristicBrain.enabled = false;
+		}
         // Resets all agents and the scene as well
         foreach (UnitAgent agent in agents) {
             Debug.Log("Told agent" + agent.name + " to be Done");
             agent.Done();
         }
         battleManager.StartBattle();
-        // ResetAgentsInOrder();
     }
-
-//     private bool currentAgentReset = false;
-//     private IEnumerator WaitForCurrentAgent(UnitAgent agent){
-//         while(!agent.IsFullHealth){
-//             yield return null;
-//         }
-
-//         currentAgentReset = true;
-//     }
-
-//     private void ResetAgentsInOrder(){
-//         foreach(UnitAgent agent in agents){
-//             Debug.Log("Told agent" + agent.name + " to reset");
-//             agent.Done();
-//             currentAgentReset = false;
-//             StartCoroutine(WaitForCurrentAgent(agent));
-
-//             while(!currentAgentReset){
-//                 Debug.Log("Waiting for reset of agent " + agent.name + "...");
-//             }
-//         }
-//         Debug.Log("All units are reset");
-
-//         battleManager.StartBattle();
-//     }
 }

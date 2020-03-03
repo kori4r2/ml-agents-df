@@ -61,28 +61,23 @@ public class UnitAgent : Agent {
         Cooperative
     };
     public TYPEAGENT type;
-    public bool IsFullHealth{
-        get{
-            return self.CurHP == self.MaxHP;
-        }
+    public int CurrentHealth{
+        get{ return self.CurHP; }
     }
     [SerializeField] private Unit self;
     [SerializeField] private Unit ally;
     [SerializeField] private Unit enemy1;
     [SerializeField] private Unit enemy2;
     [SerializeField] private DecisionLog decisionLog = null;
+    private int myLogIndex = -1;
     
 	// Use this for initialization
 	void Awake () {
-        Debug.Log(self.name + " has " + ally.name + " as ally, " + enemy1.name + " as enemy1 and " + enemy2.name + " as enemy2");
-	}
-
-    void Start(){
+        // Debug.Log(self.name + " has " + ally.name + " as ally, " + enemy1.name + " as enemy1 and " + enemy2.name + " as enemy2");
         if(decisionLog){
-            decisionLog.myAgents += (type.ToString() + "agent with " + brain.name + " brain\n");
-            decisionLog.agentsCount++;
+            myLogIndex = decisionLog.AddAgent(this);
         }
-    }
+	}
 
     public override void CollectObservations() {
         // Get number of current turn (allows the brain to notice when they have been stunned)
@@ -92,41 +87,41 @@ public class UnitAgent : Agent {
         // Get cooldown of all skills
         Skill skill = self.skillList.Find(skll => skll.name == "Double");
         if (!skill.Available) {
-            Debug.Log("Double is on cooldown");
+            // Debug.Log("Double is on cooldown");
             SetActionMask((int)DECISION.DoubleEnemy1);
             SetActionMask((int)DECISION.DoubleEnemy2);
         }
         AddVectorObs((skill.CurCD - 0.0f)/(skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Poison");
         if (!skill.Available) {
-            Debug.Log("Poison is on cooldown");
+            // Debug.Log("Poison is on cooldown");
             SetActionMask((int)DECISION.PoisonEnemy1);
             SetActionMask((int)DECISION.PoisonEnemy2);
         }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Stun");
         if (!skill.Available) {
-            Debug.Log("Stun is on cooldown");
+            // Debug.Log("Stun is on cooldown");
             SetActionMask((int)DECISION.StunEnemy1);
             SetActionMask((int)DECISION.StunEnemy2);
         }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Blind");
         if (!skill.Available) {
-            Debug.Log("Blind is on cooldown");
+            // Debug.Log("Blind is on cooldown");
             SetActionMask((int)DECISION.BlindEnemy1);
             SetActionMask((int)DECISION.BlindEnemy2);
         }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Block");
         if (!skill.Available){
-            Debug.Log("Block is on cooldown");
+            // Debug.Log("Block is on cooldown");
             SetActionMask((int)DECISION.BlockSelf);
         }
         AddVectorObs((skill.CurCD - 0.0f) / (skill.cooldown - 0.0f));
         skill = self.skillList.Find(skll => skll.name == "Heal");
         if (!skill.Available) {
-            Debug.Log("Heal is on cooldown");
+            // Debug.Log("Heal is on cooldown");
             SetActionMask((int)DECISION.HealAlly);
             SetActionMask((int)DECISION.HealSelf);
         }
@@ -135,7 +130,7 @@ public class UnitAgent : Agent {
         // Get HP of enemy 1
         AddVectorObs((enemy1.CurHP - 0.0f)/(enemy1.MaxHP - 0.0f));
         if(enemy1.CurHP <= 0) {
-            Debug.Log("enemy1(" + enemy1.name + ") is dead");
+            // Debug.Log("enemy1(" + enemy1.name + ") is dead");
             SetActionMask((int)DECISION.AttackEnemy1);
             SetActionMask((int)DECISION.DoubleEnemy1);
             SetActionMask((int)DECISION.PoisonEnemy1);
@@ -155,7 +150,7 @@ public class UnitAgent : Agent {
         // Get HP of enemy 2
         AddVectorObs((enemy2.CurHP - 0.0f) / (enemy2.MaxHP - 0.0f));
         if (enemy2.CurHP <= 0) {
-            Debug.Log("enemy2(" + enemy2.name + ") is dead");
+            // Debug.Log("enemy2(" + enemy2.name + ") is dead");
             SetActionMask((int)DECISION.AttackEnemy2);
             SetActionMask((int)DECISION.DoubleEnemy2);
             SetActionMask((int)DECISION.PoisonEnemy2);
@@ -188,7 +183,7 @@ public class UnitAgent : Agent {
             // Get HP of ally
             AddVectorObs((ally.CurHP - 0.0f) / (ally.MaxHP - 0.0f));
             if (ally.CurHP <= 0){
-                Debug.Log("ally(" + ally.name + ") is dead");
+                // Debug.Log("ally(" + ally.name + ") is dead");
                 SetActionMask((int)DECISION.HealAlly);
             }
             // Get how many turns are left on status effects afflicting ally
@@ -202,7 +197,7 @@ public class UnitAgent : Agent {
             AddVectorObs((status == null ? 0.0f : (status.TurnsLeft - 0.0f)) / (status == null ? 1.0f : (status.duration - 0.0f)));
         } else {
             if (ally.CurHP <= 0){
-                Debug.Log("ally(" + ally.name + ") is dead");
+                // Debug.Log("ally(" + ally.name + ") is dead");
                 SetActionMask((int)DECISION.HealAlly);
             }
             AddVectorObs(0.0f);
@@ -211,7 +206,7 @@ public class UnitAgent : Agent {
             AddVectorObs(0.0f);
             AddVectorObs(0.0f);
         }
-        Debug.Log("Calculated reward at obs= " + GetCumulativeReward());
+        // Debug.Log("Calculated reward at obs= " + GetCumulativeReward());
     }
 
     public override void AgentAction(float[] vectorAction, string textAction) {
@@ -246,8 +241,8 @@ public class UnitAgent : Agent {
                 battleManager.targetUnit = enemy1;
                 if(decisionLog){
                     StatusEffect stunEffect = enemy1.effects.FindLast(effect => effect.text == "Stunned");
-                    if(stunEffect != null && stunEffect.TurnsLeft == 1)
-                        decisionLog.coordinatedStuns++;
+                    if(stunEffect != null && stunEffect.TurnsLeft == 1 && myLogIndex != -1)
+                        decisionLog.logs[myLogIndex].coordinatedStuns++;
                 }
                 break;
             case DECISION.StunEnemy2:
@@ -255,8 +250,8 @@ public class UnitAgent : Agent {
                 battleManager.targetUnit = enemy2;
                 if(decisionLog){
                     StatusEffect stunEffect = enemy2.effects.FindLast(effect => effect.text == "Stunned");
-                    if(stunEffect != null && stunEffect.TurnsLeft == 1)
-                        decisionLog.coordinatedStuns++;
+                    if(stunEffect != null && stunEffect.TurnsLeft == 1 && myLogIndex != -1)
+                        decisionLog.logs[myLogIndex].coordinatedStuns++;
                 }
                 break;
             case DECISION.BlindEnemy1:
@@ -264,8 +259,8 @@ public class UnitAgent : Agent {
                 battleManager.targetUnit = enemy1;
                 if(decisionLog){
                     StatusEffect blindEffect = enemy1.effects.FindLast(effect => effect.text == "Blinded");
-                    if(blindEffect != null && blindEffect.TurnsLeft == 1)
-                        decisionLog.coordinatedBlinds++;
+                    if(blindEffect != null && blindEffect.TurnsLeft == 1 && myLogIndex != -1)
+                        decisionLog.logs[myLogIndex].coordinatedBlinds++;
                 }
                 break;
             case DECISION.BlindEnemy2:
@@ -273,8 +268,8 @@ public class UnitAgent : Agent {
                 battleManager.targetUnit = enemy2;
                 if(decisionLog){
                     StatusEffect blindEffect = enemy2.effects.FindLast(effect => effect.text == "Blinded");
-                    if(blindEffect != null && blindEffect.TurnsLeft == 1)
-                        decisionLog.coordinatedBlinds++;
+                    if(blindEffect != null && blindEffect.TurnsLeft == 1 && myLogIndex != -1)
+                        decisionLog.logs[myLogIndex].coordinatedBlinds++;
                 }
                 break;
             case DECISION.BlockSelf:
@@ -288,24 +283,30 @@ public class UnitAgent : Agent {
             case DECISION.HealAlly:
                 battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Heal");
                 battleManager.targetUnit = ally;
-                if(decisionLog)
-                    decisionLog.healedAlly++;
+                if(decisionLog && myLogIndex != -1)
+                    decisionLog.logs[myLogIndex].healedAlly++;
                 break;
         }
         
-        Debug.Log("Calculated reward at action = " + GetCumulativeReward());
+        // Debug.Log("Calculated reward at action = " + GetCumulativeReward());
         battleManager.TargetSelected();
     }
 
     public new void AddReward(float value){
         base.AddReward(value);
-        if(decisionLog){
-            decisionLog.newRewards += value;
+        if(decisionLog && myLogIndex != -1){
+            decisionLog.logs[myLogIndex].reward += value;
+        }
+    }
+
+    public void OnApplicationQuit(){
+        if(decisionLog && myLogIndex != -1){
+            decisionLog.RemoveAgent(this);
         }
     }
 
     public override void AgentReset() {
         // self.ResetStats();
-        Debug.Log("agent was reset");
+        // Debug.Log("agent was reset");
     }
 }

@@ -37,7 +37,7 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         private set {
             if (curHP > 0) {
                 curHP = Mathf.Clamp(value, 0, MaxHP);
-                if (!battleManager.academy.HasTrainingBrain())
+                if (battleManager.BattleMode == BattleModes.SingleBattle)
                     hpUI.text = "HP =             " + curHP.ToString().PadLeft((int)System.Math.Floor(System.Math.Log10(MaxHP)+1)) + " /"+MaxHP;
                 if (curHP <= 0) {
                     battleManager.Kill(this);
@@ -86,11 +86,11 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         UpdateStatusUI();
     }
     public bool CheckHit(int bonus) {
-        Debug.Log("Checking hit, bth="+bonus+", def="+Def);
+        // Debug.Log("Checking hit, bth="+bonus+", def="+Def);
         return bonus > Def;
     }
     public int DealDamage(int value, string element = "None") {
-        Debug.Log("Dealing "+value+" damage");
+        // Debug.Log("Dealing "+value+" damage");
         CurHP -= (int)(value * GetMultiplier(element));
         return (int)(value * GetMultiplier(element));
     }
@@ -109,7 +109,7 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
     }
     // UI related functions
     public void UpdateStatusUI() {
-        if (battleManager.academy.HasTrainingBrain())
+        if (battleManager.BattleMode != BattleModes.SingleBattle)
             return;
         string newStatusUI = "";
         foreach (StatusEffect status in effects) {
@@ -121,38 +121,38 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         // Update all skill buttons
         for (int i = 0; i < skillList.Count; i++) {
             skillList[i].CurCD--;
-            if (!battleManager.academy.HasTrainingBrain()) {
+            if (battleManager.BattleMode == BattleModes.SingleBattle) {
                 skillButtons[i].gameObject.GetComponentInChildren<Text>().text =
                 (skillList[i].CurCD <= 0) ? skillList[i].name : skillList[i].CurCD.ToString();
                 skillButtons[i].interactable = skillList[i].Available;
             }
         }
-        Debug.Log("Setting up skills");
+        // Debug.Log("Setting up skills");
     }
     public void MakeClickable() {
-        if (battleManager.academy.HasTrainingBrain())
+        if (battleManager.BattleMode != BattleModes.SingleBattle)
             return;
         selectButton.gameObject.GetComponent<Image>().raycastTarget = true;
     }
     public void MakeUnclickable() {
-        if (battleManager.academy.HasTrainingBrain())
+        if (battleManager.BattleMode != BattleModes.SingleBattle)
             return;
         selectButton.gameObject.GetComponent<Image>().raycastTarget = false;
     }
     public void FadeOut() {
-        if (battleManager.academy.HasTrainingBrain())
+        if (battleManager.BattleMode != BattleModes.SingleBattle)
             return;
         selectButton.interactable = false;
     }
     public void FadeIn() {
-        if (battleManager.academy.HasTrainingBrain())
+        if (battleManager.BattleMode != BattleModes.SingleBattle)
             return;
         selectButton.interactable = true;
     }
 
     // Use this for initialization
     void Awake () {
-        if (!battleManager.academy.HasTrainingBrain())
+        if (battleManager.BattleMode == BattleModes.SingleBattle)
             nameUI.text = name;
         CurHP = maxHP;
         CurMP = maxMP;
@@ -174,7 +174,7 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         skillList.Add(new Heal(this));
         MakeUnclickable();
         FadeIn();
-        if (!battleManager.academy.HasTrainingBrain())
+        if (battleManager.BattleMode == BattleModes.SingleBattle)
             outline.SetActive(false);
 	}
 
@@ -193,8 +193,8 @@ public class Unit : MonoBehaviour , System.IComparable<Unit> {
         acted = false;
         lastAtkHit = false;
         MakeUnclickable();
-        if (!battleManager.academy.HasTrainingBrain())
+        if (battleManager.BattleMode == BattleModes.SingleBattle)
             outline.SetActive(false);
-        Debug.Log("Resetting " + name + ", CurHP = " + CurHP);
+        // Debug.Log("Resetting " + name + ", CurHP = " + CurHP);
     }
 }

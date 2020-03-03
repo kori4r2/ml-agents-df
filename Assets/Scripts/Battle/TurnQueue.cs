@@ -43,8 +43,8 @@ public class TurnQueue {
             battleManager.turnCounter++;
             RollInitiative();
         }
-        Debug.Log("queue: " + string.Join(",", queue));
-        Debug.Log("backupList: " + string.Join(",", backupList));
+        // Debug.Log("queue: " + string.Join(",", queue));
+        // Debug.Log("backupList: " + string.Join(",", backupList));
         backupList.Add(queue[0]);
         queue.RemoveAt(0);
         return backupList[backupList.Count-1];

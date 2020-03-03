@@ -2,18 +2,27 @@
 using MLAgents;
 using System.Collections.Generic;
 
-public enum BEHAVIOUR{
-    AutoAttack,
-    SimpleLogic
-};
+// public enum BEHAVIOUR{
+//     AutoAttack,
+//     SimpleLogic
+// };
 
 public class SimpleHeuristic : MonoBehaviour, Decision {
-    public BEHAVIOUR logic;
+    // public BEHAVIOUR logic;
+    [SerializeField, Range(0,1)] private float difficulty = 0.0f;
+    public float Difficulty {
+        get{
+            return difficulty;
+        }
+        set{
+            difficulty = Mathf.Clamp(value, 0, 1);
+        }
+    }
     public float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, float reward, bool done, List<float> memory) {
         float[] decision = new float[1] { -1 }; // The decision variable has to be float[], but the value will be an integer
         // Define standard action to avoid invalid return value
         decision[0] = (vectorObs[(int)OBSERVATION.Enemy1HP] > 0.0f) ? (int)DECISION.AttackEnemy1 : (int)DECISION.AttackEnemy2;
-        if (logic == BEHAVIOUR.AutoAttack) {
+        if (Difficulty < 0) {
             if (vectorObs[(int)OBSERVATION.Enemy1HP] > 0.0f && vectorObs[(int)OBSERVATION.Enemy2HP] > 0.0f)
                 decision[0] = (Random.Range(0, 2) == 0) ? (int)DECISION.AttackEnemy1 : (int)DECISION.AttackEnemy2;
             else
@@ -45,7 +54,7 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
                 decision[0] = (int)DECISION.HealAlly;
             else {
                 // Stun is OP, if you can stun someone, DO IT
-                if (vectorObs[(int)OBSERVATION.StunCooldown] <= 0.0f && vectorObs[(int)OBSERVATION.SelfBlinded] <= 0.0f &&
+                if (Difficulty >= 0.75f && vectorObs[(int)OBSERVATION.StunCooldown] <= 0.0f && vectorObs[(int)OBSERVATION.SelfBlinded] <= 0.0f &&
                    ((canHitEnemy1 && vectorObs[(int)OBSERVATION.Enemy1Stunned] <= 0.34f) ||
                     (canHitEnemy2 && vectorObs[(int)OBSERVATION.Enemy2Stunned] <= 0.34f))) {
                     // If enemy1 is a valid target, stun them
@@ -55,14 +64,14 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
                     else
                         decision[0] = (int)DECISION.StunEnemy2;
                 // If you or your friend needs a heal and have no shields up, they should be healed
-                } else if (vectorObs[(int)OBSERVATION.HealCooldown] <= 0.0f && (selfVulnerable || allyVulnerable)) {
+                } else if (Difficulty >= 0.25f && vectorObs[(int)OBSERVATION.HealCooldown] <= 0.0f && (selfVulnerable || allyVulnerable)) {
                     // Heal the one with lower hp
                     if (vectorObs[(int)OBSERVATION.SelfHP] <= vectorObs[(int)OBSERVATION.AllyHP])
                         decision[0] = (int)DECISION.HealSelf;
                     else
                         decision[0] = (int)DECISION.HealAlly;
                 // If there is risk of being attacked and you can reduce it, it should be done
-                } else if (enemiesCanHit && vectorObs[(int)OBSERVATION.SelfHP] <= 0.8f &&
+                } else if (Difficulty >= 0.75f && enemiesCanHit && vectorObs[(int)OBSERVATION.SelfHP] <= 0.8f &&
                            (vectorObs[(int)OBSERVATION.BlockCooldown] <= 0.0f || (vectorObs[(int)OBSERVATION.BlindCooldown] <= 0.0f && vectorObs[(int)OBSERVATION.SelfBlinded] <= 0.0f && (canHitEnemy1 || canHitEnemy2)))) {
                     // Blind or block
                     if (vectorObs[(int)OBSERVATION.BlockCooldown] <= 0.0f)
@@ -72,7 +81,7 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
                     else
                         decision[0] = (int)DECISION.BlindEnemy2;
                 // If any of the damage skills can be reliably used, its better than attack
-                } else if ((canHitEnemy1 || canHitEnemy2) && vectorObs[(int)OBSERVATION.SelfBlinded] <= 0.0f &&
+                } else if (Difficulty >= 0.25f && (canHitEnemy1 || canHitEnemy2) && vectorObs[(int)OBSERVATION.SelfBlinded] <= 0.0f &&
                            (vectorObs[(int)OBSERVATION.PoisonCooldown] <= 0.0f || (vectorObs[(int)OBSERVATION.DoubleCooldown] <= 0.0f && vectorObs[(int)OBSERVATION.LastAtkHit] == 1.0f)) ) {
                     // Offensive skills
                     if (vectorObs[(int)OBSERVATION.PoisonCooldown] <= 0.0f)

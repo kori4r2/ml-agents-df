@@ -5,19 +5,32 @@ using UnityEngine.UI;
 
 public delegate void MyDelegate();
 
+public enum BattleModes{
+    Auto = 0,
+    Training,
+    DataCollection,
+    SingleBattle
+}
+
 public class BattleManager : MonoBehaviour {
+
     public List<Unit> units = new List<Unit>();
     public Unit currentUnit;
     public Unit targetUnit;
     public Skill selectedAction;
-    public int expectedNUnits = 4;
     public int turnCounter = -1;
     public char winningTeam;
     public DFAcademy academy;
     public bool rematchOverride = false;
     private bool waiting;
     private bool battleStarted = false;
+    [SerializeField] private BattleModes battleMode;
+    public BattleModes BattleMode { get { return battleMode; } }
+    [SerializeField] private long nDataCollection = 2000;
+
+    [SerializeField] private long nBattles = 0;
     public List<DecisionLog> decisionLogs;
+
     private Text logObject;
     private string logString;
     public string BattleLog {
@@ -25,16 +38,16 @@ public class BattleManager : MonoBehaviour {
         set {
             string[] split = value.Split(new char[]{'\n'}, System.StringSplitOptions.RemoveEmptyEntries);
             if (split.Length <= 0){
-                if(!academy.HasTrainingBrain())
+                if(BattleMode == BattleModes.SingleBattle)
                     logObject.text = "";
                 logString = "";
             }
             else {
-                if(!academy.HasTrainingBrain())
+                if(BattleMode == BattleModes.SingleBattle)
                     logObject.text = turnCounter +": "+ split[split.Length-1]+"\n";
                 logString = turnCounter +": "+ split[split.Length-1]+"\n";
                 for (int i = 0; i < split.Length - 1; i++) {
-                    if(!academy.HasTrainingBrain())
+                    if(BattleMode == BattleModes.SingleBattle)
                         logObject.text += split[i] + "\n";
                     logString += split[i] + "\n";
                 }
@@ -44,23 +57,32 @@ public class BattleManager : MonoBehaviour {
     private TurnQueue queue;
 
     public void Start(){
+        if(BattleMode == BattleModes.Auto){
+            if(academy.HasTrainingBrain){
+                battleMode = BattleModes.Training;
+            }else if(academy.HasTrainedBrain && !academy.HasPlayerBrain){
+                battleMode = BattleModes.DataCollection;
+            }else{
+                battleMode = BattleModes.SingleBattle;
+            }
+        }
+
         queue = new TurnQueue(this);
+        nBattles = 0;
+        foreach(DecisionLog log in decisionLogs){
+            log.ClearLog();
+        }
         StartBattle();
     }
     
     public void Kill(Unit unit) {
-        // Removes from lists and changes interface to reflect death
+        // Removes from queue and changes interface to reflect death
         unit.FadeOut();
         unit.MakeUnclickable();
-        //units.Remove(unit);
         queue.Remove(unit);
-        //NUnits--;
     }
     public void Add(Unit unit) {
-        Debug.Log("Added unit: " + unit.name);
-        //units.Add(unit);
         queue.Enqueue(unit);
-        //NUnits++;
     }
     public void StartBattle() {
         foreach(Unit unit in units){
@@ -71,8 +93,8 @@ public class BattleManager : MonoBehaviour {
         battleStarted = true;
         academy = GameObject.Find("Academy").GetComponent<DFAcademy>();
 
-        Debug.Log("Battle started");
-        if(!academy.HasTrainingBrain()){
+        // Debug.Log("Battle started");
+        if(BattleMode == BattleModes.SingleBattle){
             Unit unit = units[0];
             // make sure skill buttons are clickable
             foreach (Button button in unit.skillButtons) {
@@ -85,9 +107,10 @@ public class BattleManager : MonoBehaviour {
         StartTurn();
     }
     public void EndBattle(char winTeam) {
-        Debug.Log("Battle ended");
+        nBattles++;
+        // Debug.Log("Battle ended");
         winningTeam = winTeam;
-        if(!academy.HasTrainingBrain()){
+        if(BattleMode == BattleModes.SingleBattle){
             Unit survivor = queue.Dequeue();
             foreach(Button button in survivor.skillButtons) {
                 button.interactable = false;
@@ -96,10 +119,11 @@ public class BattleManager : MonoBehaviour {
         queue.Clear();
 
         battleStarted = false;
-        if (!academy.HasTrainingBrain() && !rematchOverride) {
+        if ((BattleMode == BattleModes.SingleBattle && !rematchOverride) ||
+            (BattleMode == BattleModes.DataCollection && (nBattles >= nDataCollection))) {
             academy.CalculateRewards();
             foreach(DecisionLog log in decisionLogs){
-                log.RecalculateStatistics();
+                log.SaveBattle();
             }
             GameObject message = GameObject.Instantiate(Resources.Load("WinMessage") as GameObject, GameObject.Find("Canvas").transform);
             message.GetComponentInChildren<Text>().text += winningTeam;
@@ -113,7 +137,7 @@ public class BattleManager : MonoBehaviour {
         //Debug.Log("Turn started");
         waiting = false;
         currentUnit = queue.Dequeue();
-        if (!academy.HasTrainingBrain())
+        if (BattleMode == BattleModes.SingleBattle)
             currentUnit.outline.SetActive(true);
         MyDelegate continuation = currentUnit.CountdownEffects;
         continuation += ContinueTurn;
@@ -127,7 +151,7 @@ public class BattleManager : MonoBehaviour {
         waiting = false;
     }
     public void Wait3Seconds() {
-        if (!academy.HasTrainingBrain()) {
+        if (BattleMode == BattleModes.SingleBattle) {
             waiting = true;
             currentUnit.StartCoroutine(WaitSeconds(3.0f));
         } else
@@ -148,7 +172,7 @@ public class BattleManager : MonoBehaviour {
             // Update all skill buttons, and skill cooldowns
             MyDelegate orderedFunctions = currentUnit.SetupTurn;
             // If it is not the player, get decision of movement from brain
-            if (currentUnit.GetComponent<UnitAgent>().brain.brainType != MLAgents.BrainType.Player) {
+            if (currentUnit.GetComponent<UnitAgent>().brain.brainType != MLAgents.BrainType.Player && BattleMode == BattleModes.SingleBattle) {
                 orderedFunctions += Wait3Seconds;
                 orderedFunctions += WaitToGetAction;
             }
@@ -169,7 +193,7 @@ public class BattleManager : MonoBehaviour {
         */
         //Debug.Log("Turn ended");
         currentUnit.acted = false;
-        if (!academy.HasTrainingBrain())
+        if (BattleMode == BattleModes.SingleBattle)
             currentUnit.outline.SetActive(false);
         int team1Count = 0;
         int team2Count = 0;
@@ -227,7 +251,7 @@ public class BattleManager : MonoBehaviour {
         }
     }
     public void TargetSelected() {
-        Debug.Log("Target selected, "+currentUnit.name+" used "+selectedAction.name+" on "+targetUnit.name);
+        // Debug.Log("Target selected, "+currentUnit.name+" used "+selectedAction.name+" on "+targetUnit.name);
         MyDelegate aux = selectedAction.Use;
         // Give rewards for enemies killed and negative rewards for deaths
         aux += EndTurn;

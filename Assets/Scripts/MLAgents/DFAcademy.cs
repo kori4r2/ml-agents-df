@@ -11,16 +11,39 @@ public class DFAcademy : Academy {
 	[SerializeField] private Brain trainedBrain;
 	[SerializeField] private Brain heuristicBrain;
     private bool changedLogic;
-    private const float maxRewardValue = 50.0f;
+    public const float maxRewardValue = 50.0f;
     private int debug = 0;
     
-    public bool HasTrainingBrain() {
-        //return true;
-        foreach (UnitAgent agent in agents) {
-            if (agent.brain.brainType == BrainType.External)
-                return true;
+    public bool HasTrainingBrain {
+        get{
+            return trainingBrain.gameObject.activeSelf;
         }
-        return false;
+    }
+    public bool HasPlayerBrain{
+        get{
+            if(!playerBrain.gameObject.activeSelf)
+                return false;
+
+            foreach(Agent agent in agents){
+                if(agent.brain == playerBrain){
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    public bool HasTrainedBrain{
+        get{
+            if(!trainedBrain.gameObject.activeSelf)
+                return false;
+
+            foreach(Agent agent in agents){
+                if(agent.brain == trainedBrain){
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public override void InitializeAcademy() {
@@ -65,12 +88,12 @@ public class DFAcademy : Academy {
                     } 
                 }
             }
-            Debug.Log("Adding reward of " + (rewards[i] * maxRewardValue) + " to " + agents[i].name);
+            // Debug.Log("Adding reward of " + (rewards[i] * maxRewardValue) + " to " + agents[i].name);
             agents[i].AddReward(rewards[i] * maxRewardValue / 2.0f);
         }
         // Print cumulative rewards
         foreach (UnitAgent agent in agents) {
-            Debug.Log("agent " + agent.name + " has reward of " + agent.GetCumulativeReward());
+            // Debug.Log("agent " + agent.name + " has reward of " + agent.GetCumulativeReward());
         }
     }
 
@@ -78,25 +101,20 @@ public class DFAcademy : Academy {
         //debug++;
         CalculateRewards();
         foreach(DecisionLog log in battleManager.decisionLogs){
-            log.RecalculateStatistics();
+            log.SaveBattle();
         }
         // Clear battle log
         battleManager.BattleLog = "";
         // During curriculum training, changes the heuristic brain's logic if necessary
         if ((!changedLogic && resetParameters["logic"] == 1.0f) || debug >= 5) {
-			heuristicBrain.GetComponent<SimpleHeuristic>().logic = BEHAVIOUR.SimpleLogic;
+			heuristicBrain.GetComponent<SimpleHeuristic>().Difficulty = 0.5f;
             changedLogic = true;
         } else if((changedLogic && resetParameters["logic"] == 2.0f) || debug >= 10){
-			foreach(UnitAgent agent in agents){
-				if(agent.brain.brainType != BrainType.Internal){
-					agent.GiveBrain(trainingBrain);
-				}
-			}
-            heuristicBrain.enabled = false;
+			heuristicBrain.GetComponent<SimpleHeuristic>().Difficulty = 1.0f;
 		}
         // Resets all agents and the scene as well
         foreach (UnitAgent agent in agents) {
-            Debug.Log("Told agent" + agent.name + " to be Done");
+            // Debug.Log("Told agent" + agent.name + " to be Done");
             agent.Done();
         }
         battleManager.StartBattle();

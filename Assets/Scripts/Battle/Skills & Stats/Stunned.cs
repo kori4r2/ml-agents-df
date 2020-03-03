@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Stunned : StatusEffect {
-    public Stunned(Unit src, Unit trgt, int duration=3):
+    public Stunned(Unit src, Unit trgt, int duration=2):
         base(src, trgt, "Stunned", duration) {
     }
 

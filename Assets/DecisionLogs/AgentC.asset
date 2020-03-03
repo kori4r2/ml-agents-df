@@ -9,9 +9,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eb2434922668749e482cccb756b36dd2, type: 3}
-  m_Name: Testing
+  m_Name: AgentC
   m_EditorClassIdentifier: 
   csvFile: {fileID: 0}
   csvFilePath: 
   agents: []
-  logs: []
+  logs:
+  - healedAlly: 0
+    coordinatedStuns: 0
+    coordinatedBlinds: 0
+    remainingHP: 0
+    won: 0
+    reward: 0
+  - healedAlly: 0
+    coordinatedStuns: 0
+    coordinatedBlinds: 0
+    remainingHP: 0
+    won: 0
+    reward: 0
+  - healedAlly: 0
+    coordinatedStuns: 0
+    coordinatedBlinds: 0
+    remainingHP: 0
+    won: 0
+    reward: 0

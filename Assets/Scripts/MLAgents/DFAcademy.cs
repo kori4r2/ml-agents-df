@@ -107,10 +107,10 @@ public class DFAcademy : Academy {
         battleManager.BattleLog = "";
         // During curriculum training, changes the heuristic brain's logic if necessary
         if ((!changedLogic && resetParameters["logic"] == 1.0f) || debug >= 5) {
-			heuristicBrain.GetComponent<SimpleHeuristic>().Difficulty = 0.5f;
+			heuristicBrain.GetComponent<SimpleHeuristic>().Difficulty = 1;
             changedLogic = true;
         } else if((changedLogic && resetParameters["logic"] == 2.0f) || debug >= 10){
-			heuristicBrain.GetComponent<SimpleHeuristic>().Difficulty = 1.0f;
+			heuristicBrain.GetComponent<SimpleHeuristic>().Difficulty = 2;
 		}
         // Resets all agents and the scene as well
         foreach (UnitAgent agent in agents) {

@@ -23,6 +23,7 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
         }
     }
     public float[] Decide(List<float> vectorObs, List<Texture2D> visualObs, float reward, bool done, List<float> memory) {
+        // Debug.Log("heuristic deciding on action...");
         float[] decision = new float[1] { -1 }; // The decision variable has to be float[], but the value will be an integer
         // Define standard action to avoid invalid return value
         decision[0] = (vectorObs[(int)OBSERVATION.Enemy1HP] > 0.0f) ? (int)DECISION.AttackEnemy1 : (int)DECISION.AttackEnemy2;
@@ -198,6 +199,7 @@ public class SimpleHeuristic : MonoBehaviour, Decision {
                 }
             }
         }
+        // Debug.Log("heuristic decided on action");
         return decision;
     }
 

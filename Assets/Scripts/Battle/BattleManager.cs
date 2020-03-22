@@ -72,7 +72,9 @@ public class BattleManager : MonoBehaviour {
         foreach(DecisionLog log in decisionLogs){
             log.ClearLog();
         }
-        StartBattle();
+        if(BattleMode != BattleModes.Training){
+            StartBattle();
+        }
     }
     
     public void Kill(Unit unit) {
@@ -134,7 +136,7 @@ public class BattleManager : MonoBehaviour {
 
     }
     public void StartTurn() {
-        //Debug.Log("Turn started");
+        // Debug.Log("Turn started");
         waiting = false;
         currentUnit = queue.Dequeue();
         if (BattleMode == BattleModes.SingleBattle)
@@ -144,10 +146,10 @@ public class BattleManager : MonoBehaviour {
         continuation();
     }
     private IEnumerator WaitSeconds(float dur) {
-        //Debug.Log("waiting started");
+        // Debug.Log("waiting started");
         waiting = true;
         yield return new WaitForSeconds(dur);
-        //Debug.Log("waiting ended");
+        // Debug.Log("waiting ended");
         waiting = false;
     }
     public void Wait3Seconds() {
@@ -158,21 +160,22 @@ public class BattleManager : MonoBehaviour {
             waiting = false;
     }
     private IEnumerator WaitingForWait() {
-        while (waiting)
+        while (waiting && BattleMode == BattleModes.SingleBattle)
             yield return new WaitForSeconds(0.1f);
-        //Debug.Log("requesting decision from " + currentUnit.name);
+        // Debug.Log("requesting decision from " + currentUnit.name);
         currentUnit.GetComponent<UnitAgent>().RequestDecision();
     }
     private void WaitToGetAction() {
         currentUnit.StartCoroutine(WaitingForWait());
     }
     public void ContinueTurn() {
-        //Debug.Log("continuing turn");
+        // Debug.Log("continuing turn");
         if (currentUnit.CurHP > 0 && !currentUnit.acted) {
             // Update all skill buttons, and skill cooldowns
             MyDelegate orderedFunctions = currentUnit.SetupTurn;
             // If it is not the player, get decision of movement from brain
-            if (currentUnit.GetComponent<UnitAgent>().brain.brainType != MLAgents.BrainType.Player && BattleMode == BattleModes.SingleBattle) {
+            if (currentUnit.GetComponent<UnitAgent>().brain.brainType != MLAgents.BrainType.Player) {
+                waiting = true;
                 orderedFunctions += Wait3Seconds;
                 orderedFunctions += WaitToGetAction;
             }
@@ -191,7 +194,7 @@ public class BattleManager : MonoBehaviour {
             Debug.Log("agent " + agent.name + " has reward of " + agent.GetReward());
         }
         */
-        //Debug.Log("Turn ended");
+        // Debug.Log("Turn ended");
         currentUnit.acted = false;
         if (BattleMode == BattleModes.SingleBattle)
             currentUnit.outline.SetActive(false);
@@ -213,7 +216,7 @@ public class BattleManager : MonoBehaviour {
             StartTurn();
     }
     public void SkillSelected() {
-        //Debug.Log("Skill selected");
+        // Debug.Log("Skill selected");
         foreach(Unit unit in units) {
             switch (selectedAction.skillType) {
                 case TARGETS.ALL:
@@ -251,7 +254,7 @@ public class BattleManager : MonoBehaviour {
         }
     }
     public void TargetSelected() {
-        // Debug.Log("Target selected, "+currentUnit.name+" used "+selectedAction.name+" on "+targetUnit.name);
+        //  Debug.Log("Target selected, "+currentUnit.name+" used "+selectedAction.name+" on "+targetUnit.name);
         MyDelegate aux = selectedAction.Use;
         // Give rewards for enemies killed and negative rewards for deaths
         aux += EndTurn;

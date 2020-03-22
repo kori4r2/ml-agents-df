@@ -14,22 +14,4 @@ MonoBehaviour:
   csvFile: {fileID: 0}
   csvFilePath: 
   agents: []
-  logs:
-  - healedAlly: 0
-    coordinatedStuns: 0
-    coordinatedBlinds: 0
-    remainingHP: 0
-    won: 0
-    reward: 0
-  - healedAlly: 0
-    coordinatedStuns: 0
-    coordinatedBlinds: 0
-    remainingHP: 0
-    won: 0
-    reward: 0
-  - healedAlly: 0
-    coordinatedStuns: 0
-    coordinatedBlinds: 0
-    remainingHP: 0
-    won: 0
-    reward: 0
+  logs: []

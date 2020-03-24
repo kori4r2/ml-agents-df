@@ -74,7 +74,7 @@ public class UnitAgent : Agent {
 	// Use this for initialization
 	void Awake () {
         // Debug.Log(self.name + " has " + ally.name + " as ally, " + enemy1.name + " as enemy1 and " + enemy2.name + " as enemy2");
-        if(decisionLog){
+        if(decisionLog && brain.brainType == BrainType.Internal){
             myLogIndex = decisionLog.AddAgent(this);
         }
 	}
@@ -283,8 +283,18 @@ public class UnitAgent : Agent {
             case DECISION.HealAlly:
                 battleManager.selectedAction = self.skillList.Find(skill => skill.name == "Heal");
                 battleManager.targetUnit = ally;
-                if(decisionLog && myLogIndex != -1)
+                if(decisionLog && myLogIndex != -1){
                     decisionLog.logs[myLogIndex].healedAlly++;
+                    // Same health percentage the heuristic uses to classify unit as vulnerable
+                    if(ally.CurHP < 0.65 * ally.MaxHP){
+                        decisionLog.logs[myLogIndex].healedVulnerableAlly++;
+                    }
+                    // The heal skill heals based on max hp percentage of the target
+                    // For consistency's sake the comparison also uses health percentage
+                    if(ally.CurHP / ally.MaxHP < self.CurHP / self.MaxHP){
+                        decisionLog.logs[myLogIndex].healedWeakerAlly++;
+                    }
+                }
                 break;
         }
         
@@ -300,9 +310,10 @@ public class UnitAgent : Agent {
     }
 
     public void OnApplicationQuit(){
-        if(decisionLog && myLogIndex != -1){
-            decisionLog.RemoveAgent(this);
-        }
+        // No longer necessary, battlemanager takes care of this
+        // if(decisionLog && myLogIndex != -1){
+        //     decisionLog.RemoveAgent(this);
+        // }
     }
 
     public override void AgentReset() {

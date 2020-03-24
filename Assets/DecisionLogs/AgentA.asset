@@ -11,6 +11,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb2434922668749e482cccb756b36dd2, type: 3}
   m_Name: AgentA
   m_EditorClassIdentifier: 
+  vsWeak: {fileID: 4900000, guid: 323cd2412bfc0004e8fa826adf6cdba6, type: 3}
+  vsMedium: {fileID: 4900000, guid: e3101cc1c42b33440b8b689e1cc52c54, type: 3}
+  vsStrong: {fileID: 4900000, guid: 098ef33789984a74ea2186be2889dcbb, type: 3}
+  vsTrained: {fileID: 4900000, guid: fcccfa65289da0445b8b882ded4c795a, type: 3}
   csvFile: {fileID: 0}
   csvFilePath: 
   agents: []

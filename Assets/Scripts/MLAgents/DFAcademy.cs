@@ -10,12 +10,35 @@ public class DFAcademy : Academy {
 	[SerializeField] private Brain playerBrain;
 	[SerializeField] private Brain trainedBrain;
 	[SerializeField] private Brain heuristicBrain;
+    public int CurrentDifficulty{
+        get{
+            if(!HasHeuristicBrain)
+                return -1;
+            return heuristicBrain.GetComponent<SimpleHeuristic>()?.Difficulty ?? -1;
+        }
+    }
     private bool changedLogic;
     public const float maxRewardValue = 50.0f;
     private int debug = 0;
+
+    public bool HasHeuristicBrain {
+        get{
+            if(!heuristicBrain.gameObject.activeSelf)
+                return false;
+
+            foreach(Agent agent in agents){
+                if(agent.brain == heuristicBrain){
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
     
     public bool HasTrainingBrain {
         get{
+            // If the training brain is active in a situation where it's not used, an error occurs,
+            // so the checking process can be simpler than the others
             return trainingBrain.gameObject.activeSelf;
         }
     }

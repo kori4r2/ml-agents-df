@@ -14,13 +14,16 @@ public enum BattleModes{
 
 public class BattleManager : MonoBehaviour {
 
+    public static BattleManager Instance { get; private set; } = null;
+
     public List<Unit> units = new List<Unit>();
     public Unit currentUnit;
     public Unit targetUnit;
     public Skill selectedAction;
     public int turnCounter = -1;
     public char winningTeam;
-    public DFAcademy academy;
+    [SerializeField] private DFAcademy academy;
+    public DFAcademy Academy { get { return academy; } }
     public bool rematchOverride = false;
     private bool waiting;
     private bool battleStarted = false;
@@ -55,6 +58,27 @@ public class BattleManager : MonoBehaviour {
         }
     }
     private TurnQueue queue;
+
+    public void Awake(){
+        if(Instance){
+            Destroy(this);
+        }else{
+            Instance = this;
+        }
+    }
+
+    public void OnDestroy(){
+        if(Instance == this){
+            Instance = null;
+        }
+    }
+
+    public void OnApplicationQuit(){
+        foreach(DecisionLog log in decisionLogs){
+            log.agents.Clear();
+            log.logs.Clear();
+        }
+    }
 
     public void Start(){
         if(BattleMode == BattleModes.Auto){

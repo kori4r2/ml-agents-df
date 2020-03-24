@@ -11,25 +11,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb2434922668749e482cccb756b36dd2, type: 3}
   m_Name: AgentC
   m_EditorClassIdentifier: 
+  vsWeak: {fileID: 4900000, guid: 555df0988186f3e4c9391b31a95c136f, type: 3}
+  vsMedium: {fileID: 4900000, guid: 04bd7b5e39a86564593bf847149aefce, type: 3}
+  vsStrong: {fileID: 4900000, guid: 68523126592d46842af00e2343a19055, type: 3}
+  vsTrained: {fileID: 4900000, guid: f48f1f98aed0d4649b39b4042ebd9f93, type: 3}
   csvFile: {fileID: 0}
   csvFilePath: 
   agents: []
-  logs:
-  - healedAlly: 0
-    coordinatedStuns: 0
-    coordinatedBlinds: 0
-    remainingHP: 0
-    won: 0
-    reward: 0
-  - healedAlly: 0
-    coordinatedStuns: 0
-    coordinatedBlinds: 0
-    remainingHP: 0
-    won: 0
-    reward: 0
-  - healedAlly: 0
-    coordinatedStuns: 0
-    coordinatedBlinds: 0
-    remainingHP: 0
-    won: 0
-    reward: 0
+  logs: []

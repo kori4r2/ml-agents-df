@@ -27,7 +27,6 @@ ExportedObj/
 
 # Unity3D generated meta files
 *.pidb.meta
-#*.meta
 
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
@@ -39,6 +38,6 @@ ml-agents/*
 
 #Training files
 models/*
-summaries/*
+#summaries/*
 train*.yaml
 *UnitySDK.log
